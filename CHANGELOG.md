@@ -12,10 +12,12 @@
 - Sub-GHz:
   - Show satellites count with an icon (#215 by @m7i-org)
   - Add Bresser 3CH weather station protocol (#217 #245 by @m7i-org)
+  - Add Vauno-EN8822 weather station protocol (#262 by @m7i-org)
   - UL: Add Marantec24 protocol (static 24 bit) with add manually (by @xMasterX)
   - UL: Add GangQi protocol (static 34 bit) with button parsing and add manually (by @xMasterX & @Skorpionm)
   - UL: Add Hollarm protocol (static 42 bit) with button parsing and add manually (by @xMasterX & @Skorpionm)
   - UL: Add Hay21 protocol (dynamic 21 bit) with button parsing (by @xMasterX)
+  - UL: Add Keeloq Monarch full support, with add manually (by anonymous UL contributor)
   - UL: Princeton custom buttons support (by @xMasterX)
 - NFC:
   - OFW: MIFARE Classic Key Recovery Improvements (PR 3822 by @noproto)
@@ -25,9 +27,12 @@
   - Add SmartRider Parser (#203 by @jaylikesbunda)
   - Add API to enforce ISO15693 mode (#225 by @aaronjamt)
 - Infrared:
-  - Bluray/DVD Universal Remote (#250 by @jaylikesbunda)
+  - Bluray/DVD Universal Remote (#250 #264 by @jaylikesbunda)
   - Option to "Load from Library File" for Universal Remotes (#255 by @zxkmm)
 - Updater: New Yappy themed icon while updating (#253 by @the1anonlypr3 & @Kuronons & @nescap)
+- JS:
+  - New `i2c` module (#259 by @jamisonderek)
+  - New `spi` module (#272 by @jamisonderek)
 - BadKB:
   - OFW: Add linux/gnome badusb demo files (by @thomasnemer)
   - Add older qFlipper install demos for windows and macos (by @DXVVAY & @grugnoymeme)
@@ -58,11 +63,18 @@
   - CLI-GUI Bridge: Add more symbols to keyboard (#222 by @Willy-JL)
   - UL: Sub-GHz Bruteforcer: Add new protocols for existing dump option (by @xMasterX), use FW functions for top buttons (by @DerSkythe)
   - UL: NRF24 Apps: Use string library compatible with OFW SDK (by @xMasterX)
+  - UL: W5500 Ethernet: Various fixes and improvements (by @xMasterX)
   - OFW: SPI Mem Manager: Fixed UI rendering bug related to line breaks (by @portasynthinca3)
 - CLI: Print plugin name on load fail (by @Willy-JL)
 - NFC:
+  - NDEF Parser:
+    - Mifare Classic support (#265 by @luu176), protocol-agnostic rewrite and more improvements (#265 by @Willy-JL)
+    - Decoding of URL-encoded URI characters (#267 by @jaylikesbunda)
+    - SmartPoster record support (#275 by @Willy-JL)
+    - Enable parsing NTAG I2C Plus 1k and 2k chips too (#237 by @RocketGod-git)
   - Added 6 new Mifare Classic keys from Bulgaria Hotel (#216 by @z3r0l1nk)
   - NDEF parser supports NTAG I2C Plus 1k and 2k chips too (by @RocketGod-git)
+  - UL: Add iq aparts hotel key (by @xMasterX)
   - OFW/UL: Rename 'Detect Reader' to 'Extract MFC Keys' (by @bettse & @xMasterX)
   - OFW: Plantain parser improvements (by @assasinfil)
   - OFW: Moscow social card parser (by @assasinfil)
