@@ -31,6 +31,12 @@
 #error Must specify what protocol to use with NDEF_PROTO define!
 #endif
 
+#define NDEF_TITLE(device, parsed_data)         \
+    furi_string_printf(                         \
+        parsed_data,                            \
+        "\e#NDEF Format Data\nCard type: %s\n", \
+        nfc_device_get_name(device, NfcDeviceNameTypeFull))
+
 // ---=== structures ===---
 
 // TLV structure:
@@ -744,10 +750,7 @@ static bool ndef_ul_parse(const NfcDevice* device, FuriString* parsed_data) {
     size_t max_size = mf_ultralight_get_pages_total(data->type) * MF_ULTRALIGHT_PAGE_SIZE;
     end = MIN(end, &data->page[0].data[0] + max_size);
 
-    furi_string_printf(
-        parsed_data,
-        "\e#NDEF Format Data\nCard type: %s\n",
-        mf_ultralight_get_device_name(data, NfcDeviceNameTypeFull));
+    NDEF_TITLE(device, parsed_data);
 
     Ndef ndef = {
         .output = parsed_data,
@@ -821,10 +824,7 @@ static bool ndef_mfc_parse(const NfcDevice* device, FuriString* parsed_data) {
         }
     }
 
-    furi_string_printf(
-        parsed_data,
-        "\e#NDEF Format Data\nCard type: %s\n",
-        mf_classic_get_device_name(data, NfcDeviceNameTypeFull));
+    NDEF_TITLE(device, parsed_data);
 
     // Calculate how large the data space is, so excluding sector trailers and MAD2.
     // Makes sure we stay within this card's actual content when parsing.
