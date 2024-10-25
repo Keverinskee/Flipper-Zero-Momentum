@@ -669,7 +669,15 @@ static bool
         furi_string_cat(ndef->output, "\n\n");
     }
 
-    return pos == end && last_record;
+    if(record_num == 0) {
+        if(smart_poster) {
+            furi_string_cat(ndef->output, "\e*> SP: Empty\n\n");
+        } else {
+            furi_string_cat_printf(ndef->output, "\e*> M%d: Empty\n\n", message_num);
+        }
+    }
+
+    return pos == end && (last_record || record_num == 0);
 }
 
 // TLV structure:
