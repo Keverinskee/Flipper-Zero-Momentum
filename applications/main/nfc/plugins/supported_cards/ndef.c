@@ -22,11 +22,12 @@
 
 #define TAG "NDEF"
 
-#define NDEF_PROTO_NONE (0)
-#define NDEF_PROTO_UL   (1)
-#define NDEF_PROTO_MFC  (2)
+#define NDEF_PROTO_INVALID (-1)
+#define NDEF_PROTO_UL      (0)
+#define NDEF_PROTO_MFC     (1)
+#define NDEF_PROTO_TOTAL   (2)
 
-#if !defined(NDEF_PROTO) || (NDEF_PROTO != NDEF_PROTO_UL && NDEF_PROTO != NDEF_PROTO_MFC)
+#if !defined(NDEF_PROTO) || NDEF_PROTO <= NDEF_PROTO_INVALID || NDEF_PROTO >= NDEF_PROTO_TOTAL
 #error Must specify what protocol to use with NDEF_PROTO define!
 #endif
 
