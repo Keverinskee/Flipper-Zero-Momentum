@@ -8,14 +8,13 @@ static bool momentum_app_custom_event_callback(void* context, uint32_t event) {
 
 void callback_reboot(void* context) {
     UNUSED(context);
-    power_reboot(PowerBootModeNormal);
+    Power* power = furi_record_open(RECORD_POWER);
+    power_reboot(power, PowerBootModeNormal);
 }
 
 bool momentum_app_apply(MomentumApp* app) {
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-
     if(app->save_mainmenu_apps) {
-        Stream* stream = file_stream_alloc(storage);
+        Stream* stream = file_stream_alloc(app->storage);
         if(file_stream_open(stream, MAINMENU_APPS_PATH, FSAM_READ_WRITE, FSOM_CREATE_ALWAYS)) {
             stream_write_format(stream, "MenuAppList Version %u\n", 1);
             for(size_t i = 0; i < CharList_size(app->mainmenu_app_exes); i++) {
@@ -26,8 +25,12 @@ bool momentum_app_apply(MomentumApp* app) {
         stream_free(stream);
     }
 
+    if(app->save_desktop) {
+        desktop_api_set_settings(app->desktop, &app->desktop_settings);
+    }
+
     if(app->save_subghz_freqs) {
-        FlipperFormat* file = flipper_format_file_alloc(storage);
+        FlipperFormat* file = flipper_format_file_alloc(app->storage);
         do {
             FrequencyList_it_t it;
             if(!flipper_format_file_open_always(file, EXT_PATH("subghz/assets/setting_user")))
@@ -63,7 +66,7 @@ bool momentum_app_apply(MomentumApp* app) {
     }
 
     if(app->save_subghz) {
-        FlipperFormat* file = flipper_format_file_alloc(storage);
+        FlipperFormat* file = flipper_format_file_alloc(app->storage);
         do {
             if(!flipper_format_file_open_always(file, "/ext/subghz/assets/extend_range.txt"))
                 break;
@@ -82,9 +85,9 @@ bool momentum_app_apply(MomentumApp* app) {
 
     if(app->save_name) {
         if(strcmp(app->device_name, "") == 0) {
-            storage_simply_remove(storage, NAMESPOOF_PATH);
+            storage_simply_remove(app->storage, NAMESPOOF_PATH);
         } else {
-            FlipperFormat* file = flipper_format_file_alloc(storage);
+            FlipperFormat* file = flipper_format_file_alloc(app->storage);
 
             do {
                 if(!flipper_format_file_open_always(file, NAMESPOOF_PATH)) break;
@@ -97,18 +100,16 @@ bool momentum_app_apply(MomentumApp* app) {
         }
     }
 
-    if(app->save_level || app->save_angry) {
-        Dolphin* dolphin = furi_record_open(RECORD_DOLPHIN);
-        if(app->save_level) {
-            int32_t xp = app->dolphin_level > 1 ? DOLPHIN_LEVELS[app->dolphin_level - 2] : 0;
-            dolphin->state->data.icounter = xp + 1;
+    if(app->save_dolphin) {
+        if(app->save_xp) {
+            app->dolphin->state->data.icounter = app->dolphin_xp;
         }
         if(app->save_angry) {
-            dolphin->state->data.butthurt = app->dolphin_angry;
+            app->dolphin->state->data.butthurt = app->dolphin_angry;
         }
-        dolphin->state->dirty = true;
-        dolphin_state_save(dolphin->state);
-        furi_record_close(RECORD_DOLPHIN);
+        app->dolphin->state->dirty = true;
+        dolphin_flush(app->dolphin);
+        dolphin_reload_state(app->dolphin);
     }
 
     if(app->save_backlight) {
@@ -141,8 +142,6 @@ bool momentum_app_apply(MomentumApp* app) {
         view_dispatcher_switch_to_view(app->view_dispatcher, MomentumAppViewPopup);
         asset_packs_init();
     }
-
-    furi_record_close(RECORD_STORAGE);
     return false;
 }
 
@@ -177,89 +176,9 @@ static void momentum_app_push_mainmenu_app(MomentumApp* app, FuriString* label, 
     CharList_push_back(app->mainmenu_app_labels, strdup(furi_string_get_cstr(label)));
 }
 
-MomentumApp* momentum_app_alloc() {
-    MomentumApp* app = malloc(sizeof(MomentumApp));
-    app->gui = furi_record_open(RECORD_GUI);
-    app->dialogs = furi_record_open(RECORD_DIALOGS);
-    app->expansion = furi_record_open(RECORD_EXPANSION);
-    app->notification = furi_record_open(RECORD_NOTIFICATION);
-
-    // View Dispatcher and Scene Manager
-    app->view_dispatcher = view_dispatcher_alloc();
-    app->scene_manager = scene_manager_alloc(&momentum_app_scene_handlers, app);
-    view_dispatcher_enable_queue(app->view_dispatcher);
-    view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
-
-    view_dispatcher_set_custom_event_callback(
-        app->view_dispatcher, momentum_app_custom_event_callback);
-    view_dispatcher_set_navigation_event_callback(
-        app->view_dispatcher, momentum_app_back_event_callback);
-
-    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
-
-    // Gui Modules
-    app->var_item_list = variable_item_list_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher,
-        MomentumAppViewVarItemList,
-        variable_item_list_get_view(app->var_item_list));
-
-    app->submenu = submenu_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher, MomentumAppViewSubmenu, submenu_get_view(app->submenu));
-
-    app->text_input = text_input_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher, MomentumAppViewTextInput, text_input_get_view(app->text_input));
-
-    app->byte_input = byte_input_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher, MomentumAppViewByteInput, byte_input_get_view(app->byte_input));
-
-    app->popup = popup_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher, MomentumAppViewPopup, popup_get_view(app->popup));
-
-    app->dialog_ex = dialog_ex_alloc();
-    view_dispatcher_add_view(
-        app->view_dispatcher, MomentumAppViewDialogEx, dialog_ex_get_view(app->dialog_ex));
-
-    // Settings init
-
-    app->asset_pack_index = 0;
-    CharList_init(app->asset_pack_names);
-    Storage* storage = furi_record_open(RECORD_STORAGE);
-    File* folder = storage_file_alloc(storage);
-    FileInfo info;
-    char* name = malloc(ASSET_PACKS_NAME_LEN);
-    if(storage_dir_open(folder, ASSET_PACKS_PATH)) {
-        while(storage_dir_read(folder, &info, name, ASSET_PACKS_NAME_LEN)) {
-            if(info.flags & FSF_DIRECTORY) {
-                char* copy = strdup(name);
-                size_t idx = 0;
-                for(; idx < CharList_size(app->asset_pack_names); idx++) {
-                    char* comp = *CharList_get(app->asset_pack_names, idx);
-                    if(strcasecmp(copy, comp) < 0) {
-                        break;
-                    }
-                }
-                CharList_push_at(app->asset_pack_names, idx, copy);
-                if(app->asset_pack_index != 0) {
-                    if(idx < app->asset_pack_index) app->asset_pack_index++;
-                } else {
-                    if(strcmp(copy, momentum_settings.asset_pack) == 0)
-                        app->asset_pack_index = idx + 1;
-                }
-            }
-        }
-    }
-    free(name);
-    storage_file_free(folder);
-
-    CharList_init(app->mainmenu_app_labels);
-    CharList_init(app->mainmenu_app_exes);
+void momentum_app_load_mainmenu_apps(MomentumApp* app) {
     // Loading logic mimics applications/services/loader/loader_menu.c
-    Stream* stream = file_stream_alloc(storage);
+    Stream* stream = file_stream_alloc(app->storage);
     FuriString* line = furi_string_alloc();
     FuriString* label = furi_string_alloc();
     uint32_t version;
@@ -275,10 +194,13 @@ MomentumApp* momentum_app_alloc() {
                     furi_string_set(line, "125 kHz RFID");
                 } else if(furi_string_equal(line, "SubGHz")) {
                     furi_string_set(line, "Sub-GHz");
+                } else if(furi_string_equal(line, "Xtreme")) {
+                    furi_string_set(line, "Momentum");
                 }
             }
             if(furi_string_start_with(line, "/")) {
-                if(!flipper_application_load_name_and_icon(line, storage, &unused_icon, label)) {
+                if(!flipper_application_load_name_and_icon(
+                       line, app->storage, &unused_icon, label)) {
                     furi_string_reset(label);
                 }
             } else {
@@ -321,8 +243,114 @@ MomentumApp* momentum_app_alloc() {
     furi_string_free(line);
     file_stream_close(stream);
     stream_free(stream);
+}
 
-    FlipperFormat* file = flipper_format_file_alloc(storage);
+void momentum_app_empty_mainmenu_apps(MomentumApp* app) {
+    CharList_it_t it;
+    for(CharList_it(it, app->mainmenu_app_labels); !CharList_end_p(it); CharList_next(it)) {
+        free(*CharList_cref(it));
+    }
+    CharList_reset(app->mainmenu_app_labels);
+    for(CharList_it(it, app->mainmenu_app_exes); !CharList_end_p(it); CharList_next(it)) {
+        free(*CharList_cref(it));
+    }
+    CharList_reset(app->mainmenu_app_exes);
+}
+
+MomentumApp* momentum_app_alloc() {
+    MomentumApp* app = malloc(sizeof(MomentumApp));
+    app->gui = furi_record_open(RECORD_GUI);
+    app->storage = furi_record_open(RECORD_STORAGE);
+    app->desktop = furi_record_open(RECORD_DESKTOP);
+    app->dolphin = furi_record_open(RECORD_DOLPHIN);
+    app->dialogs = furi_record_open(RECORD_DIALOGS);
+    app->expansion = furi_record_open(RECORD_EXPANSION);
+    app->notification = furi_record_open(RECORD_NOTIFICATION);
+
+    // View Dispatcher and Scene Manager
+    app->view_dispatcher = view_dispatcher_alloc();
+    app->scene_manager = scene_manager_alloc(&momentum_app_scene_handlers, app);
+
+    view_dispatcher_set_event_callback_context(app->view_dispatcher, app);
+
+    view_dispatcher_set_custom_event_callback(
+        app->view_dispatcher, momentum_app_custom_event_callback);
+    view_dispatcher_set_navigation_event_callback(
+        app->view_dispatcher, momentum_app_back_event_callback);
+
+    view_dispatcher_attach_to_gui(app->view_dispatcher, app->gui, ViewDispatcherTypeFullscreen);
+
+    // Gui Modules
+    app->var_item_list = variable_item_list_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        MomentumAppViewVarItemList,
+        variable_item_list_get_view(app->var_item_list));
+
+    app->submenu = submenu_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MomentumAppViewSubmenu, submenu_get_view(app->submenu));
+
+    app->text_input = text_input_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MomentumAppViewTextInput, text_input_get_view(app->text_input));
+
+    app->byte_input = byte_input_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MomentumAppViewByteInput, byte_input_get_view(app->byte_input));
+
+    app->number_input = number_input_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher,
+        MomentumAppViewNumberInput,
+        number_input_get_view(app->number_input));
+
+    app->popup = popup_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MomentumAppViewPopup, popup_get_view(app->popup));
+
+    app->dialog_ex = dialog_ex_alloc();
+    view_dispatcher_add_view(
+        app->view_dispatcher, MomentumAppViewDialogEx, dialog_ex_get_view(app->dialog_ex));
+
+    // Settings init
+
+    app->asset_pack_index = 0;
+    CharList_init(app->asset_pack_names);
+    File* folder = storage_file_alloc(app->storage);
+    FileInfo info;
+    char* name = malloc(ASSET_PACKS_NAME_LEN);
+    if(storage_dir_open(folder, ASSET_PACKS_PATH)) {
+        while(storage_dir_read(folder, &info, name, ASSET_PACKS_NAME_LEN)) {
+            if(info.flags & FSF_DIRECTORY && name[0] != '.') {
+                char* copy = strdup(name);
+                size_t idx = 0;
+                for(; idx < CharList_size(app->asset_pack_names); idx++) {
+                    char* comp = *CharList_get(app->asset_pack_names, idx);
+                    if(strcasecmp(copy, comp) < 0) {
+                        break;
+                    }
+                }
+                CharList_push_at(app->asset_pack_names, idx, copy);
+                if(app->asset_pack_index != 0) {
+                    if(idx < app->asset_pack_index) app->asset_pack_index++;
+                } else {
+                    if(strcmp(copy, momentum_settings.asset_pack) == 0)
+                        app->asset_pack_index = idx + 1;
+                }
+            }
+        }
+    }
+    free(name);
+    storage_file_free(folder);
+
+    CharList_init(app->mainmenu_app_labels);
+    CharList_init(app->mainmenu_app_exes);
+    momentum_app_load_mainmenu_apps(app);
+
+    desktop_api_get_settings(app->desktop, &app->desktop_settings);
+
+    FlipperFormat* file = flipper_format_file_alloc(app->storage);
     FrequencyList_init(app->subghz_static_freqs);
     FrequencyList_init(app->subghz_hopper_freqs);
     app->subghz_use_defaults = true;
@@ -348,21 +376,18 @@ MomentumApp* momentum_app_alloc() {
     } while(false);
     flipper_format_free(file);
 
-    file = flipper_format_file_alloc(storage);
+    file = flipper_format_file_alloc(app->storage);
     if(flipper_format_file_open_existing(file, "/ext/subghz/assets/extend_range.txt")) {
         flipper_format_read_bool(file, "use_ext_range_at_own_risk", &app->subghz_extend, 1);
         flipper_format_read_bool(file, "ignore_default_tx_region", &app->subghz_bypass, 1);
     }
     flipper_format_free(file);
-    furi_record_close(RECORD_STORAGE);
 
     strlcpy(app->device_name, furi_hal_version_get_name_ptr(), FURI_HAL_VERSION_ARRAY_NAME_LENGTH);
 
-    Dolphin* dolphin = furi_record_open(RECORD_DOLPHIN);
-    DolphinStats stats = dolphin_stats(dolphin);
-    app->dolphin_level = stats.level;
+    DolphinStats stats = dolphin_stats(app->dolphin);
+    app->dolphin_xp = stats.icounter;
     app->dolphin_angry = stats.butthurt;
-    furi_record_close(RECORD_DOLPHIN);
 
     // Will be "(version) (commit or date)"
     app->version_tag = furi_string_alloc_set(version_get_version(NULL));
@@ -410,6 +435,8 @@ void momentum_app_free(MomentumApp* app) {
     text_input_free(app->text_input);
     view_dispatcher_remove_view(app->view_dispatcher, MomentumAppViewByteInput);
     byte_input_free(app->byte_input);
+    view_dispatcher_remove_view(app->view_dispatcher, MomentumAppViewNumberInput);
+    number_input_free(app->number_input);
     view_dispatcher_remove_view(app->view_dispatcher, MomentumAppViewPopup);
     popup_free(app->popup);
     view_dispatcher_remove_view(app->view_dispatcher, MomentumAppViewDialogEx);
@@ -427,13 +454,8 @@ void momentum_app_free(MomentumApp* app) {
     }
     CharList_clear(app->asset_pack_names);
 
-    for(CharList_it(it, app->mainmenu_app_labels); !CharList_end_p(it); CharList_next(it)) {
-        free(*CharList_cref(it));
-    }
+    momentum_app_empty_mainmenu_apps(app);
     CharList_clear(app->mainmenu_app_labels);
-    for(CharList_it(it, app->mainmenu_app_exes); !CharList_end_p(it); CharList_next(it)) {
-        free(*CharList_cref(it));
-    }
     CharList_clear(app->mainmenu_app_exes);
 
     FrequencyList_clear(app->subghz_static_freqs);
@@ -445,6 +467,9 @@ void momentum_app_free(MomentumApp* app) {
     furi_record_close(RECORD_NOTIFICATION);
     furi_record_close(RECORD_EXPANSION);
     furi_record_close(RECORD_DIALOGS);
+    furi_record_close(RECORD_DOLPHIN);
+    furi_record_close(RECORD_DESKTOP);
+    furi_record_close(RECORD_STORAGE);
     furi_record_close(RECORD_GUI);
     free(app);
 }
