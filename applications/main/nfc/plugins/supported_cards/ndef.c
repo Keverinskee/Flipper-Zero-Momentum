@@ -521,7 +521,7 @@ static bool ndef_parse_record(
     switch(tnf) {
     case NdefTnfWellKnownType:
         if(strncmp("Sp", type, type_len) == 0) {
-            furi_string_cat(ndef->output, "SmartPoster\n");
+            furi_string_cat(ndef->output, "SmartPoster\nContained records below\n\n");
             return ndef_parse_message(ndef, pos, len, 0, true);
         } else if(strncmp("U", type, type_len) == 0) {
             return ndef_parse_uri(ndef, pos, len);
@@ -529,7 +529,7 @@ static bool ndef_parse_record(
             return ndef_parse_text(ndef, pos, len);
         }
         // Dump data without parsing
-        furi_string_cat(ndef->output, "Unsupported\n");
+        furi_string_cat(ndef->output, "Unknown\n");
         ndef_print(ndef, "Well-known Type", type, type_len, false);
         if(!ndef_dump(ndef, "Payload", pos, len, false)) return false;
         return true;
@@ -543,7 +543,7 @@ static bool ndef_parse_record(
             return ndef_parse_wifi(ndef, pos, len);
         }
         // Dump data without parsing
-        furi_string_cat(ndef->output, "Unsupported\n");
+        furi_string_cat(ndef->output, "Unknown\n");
         ndef_print(ndef, "Media Type", type, type_len, false);
         if(!ndef_dump(ndef, "Payload", pos, len, false)) return false;
         return true;
@@ -633,9 +633,9 @@ static bool
         pos += id_len;
 
         if(smart_poster) {
-            furi_string_cat_printf(ndef->output, "\e*> SP%d: ", record_num);
+            furi_string_cat_printf(ndef->output, "\e*> SP-R%d: ", record_num);
         } else {
-            furi_string_cat_printf(ndef->output, "\e*> M%dR%d: ", message_num, record_num);
+            furi_string_cat_printf(ndef->output, "\e*> M%d-R%d: ", message_num, record_num);
         }
         if(!ndef_parse_record(ndef, pos, payload_len, flags_tnf.type_name_format, type, type_len)) {
             if(type_was_allocated) free(type);
