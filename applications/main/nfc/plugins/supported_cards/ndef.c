@@ -517,7 +517,7 @@ static bool ndef_parse_wifi(Ndef* ndef, size_t pos, size_t len) {
 
 static bool
     ndef_parse_message(Ndef* ndef, size_t pos, size_t len, size_t message_num, bool smart_poster);
-static size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t already_parsed);
+static size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_parsed);
 static bool ndef_parse_record(
     Ndef* ndef,
     size_t pos,
@@ -674,10 +674,11 @@ static bool
 
 // TLV structure:
 // https://docs.nordicsemi.com/bundle/ncs-latest/page/nrfxlib/nfc/doc/type_2_tag.html#data
-static size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t already_parsed) {
+static size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_parsed) {
+    size_t end = pos + len;
     size_t message_num = 0;
 
-    while(true) {
+    while(pos < end) {
         NdefTlv tlv;
         if(!ndef_get(ndef, pos++, 1, &tlv)) return 0;
         FURI_LOG_D(TAG, "tlv: %02X", tlv);
@@ -725,6 +726,10 @@ static size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t already_parsed) {
         }
         }
     }
+
+    // Reached data end with no TLV terminator,
+    // but also no errors, treat this as a success
+    return message_num;
 }
 
 // ---=== protocol entry-points ===---
@@ -763,6 +768,8 @@ static bool ndef_ul_parse(const NfcDevice* device, FuriString* parsed_data) {
     const uint8_t* end = start + (cc->data_area_size * 8);
     size_t max_size = mf_ultralight_get_pages_total(data->type) * MF_ULTRALIGHT_PAGE_SIZE;
     end = MIN(end, &data->page[0].data[0] + max_size);
+    size_t data_start = 0;
+    size_t data_size = end - start;
 
     NDEF_TITLE(device, parsed_data);
 
@@ -771,10 +778,10 @@ static bool ndef_ul_parse(const NfcDevice* device, FuriString* parsed_data) {
         .ul =
             {
                 .start = start,
-                .size = end - start,
+                .size = data_size,
             },
     };
-    size_t parsed = ndef_parse_tlv(&ndef, 0, 0);
+    size_t parsed = ndef_parse_tlv(&ndef, data_start, data_size - data_start, 0);
 
     if(parsed) {
         furi_string_trim(parsed_data, "\n");
@@ -885,7 +892,8 @@ static bool ndef_mfc_parse(const NfcDevice* device, FuriString* parsed_data) {
             data_block = 93 + (sector - 32) * 15;
         }
         FURI_LOG_D(TAG, "data_block: %d", data_block);
-        size_t parsed = ndef_parse_tlv(&ndef, data_block * MF_CLASSIC_BLOCK_SIZE, total_parsed);
+        size_t data_start = data_block * MF_CLASSIC_BLOCK_SIZE;
+        size_t parsed = ndef_parse_tlv(&ndef, data_start, data_size - data_start, total_parsed);
 
         if(parsed) {
             total_parsed += parsed;
@@ -939,6 +947,8 @@ static bool ndef_slix_parse(const NfcDevice* device, FuriString* parsed_data) {
     const uint8_t* end = blocks + (cc->data_area_size * 8);
     size_t max_size = block_count * block_size;
     end = MIN(end, blocks + max_size);
+    size_t data_start = 0;
+    size_t data_size = end - start;
 
     NDEF_TITLE(device, parsed_data);
 
@@ -947,10 +957,10 @@ static bool ndef_slix_parse(const NfcDevice* device, FuriString* parsed_data) {
         .slix =
             {
                 .start = start,
-                .size = end - start,
+                .size = data_size,
             },
     };
-    size_t parsed = ndef_parse_tlv(&ndef, 0, 0);
+    size_t parsed = ndef_parse_tlv(&ndef, data_start, data_size - data_start, 0);
 
     if(parsed) {
         furi_string_trim(parsed_data, "\n");
