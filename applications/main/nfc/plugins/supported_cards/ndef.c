@@ -734,11 +734,11 @@ static bool ndef_ul_parse(const NfcDevice* device, FuriString* parsed_data) {
         return false;
     }
 
-    // Double check Capability Container (CC) values
+    // Check Capability Container (CC) values
     struct {
         uint8_t nfc_magic_number;
         uint8_t document_version_number;
-        uint8_t data_area_size;
+        uint8_t data_area_size; // Usable byte size / 8, only includes user memory
         uint8_t read_write_access;
     }* cc = (void*)&data->page[3].data[0];
     if(cc->nfc_magic_number != 0xE1) return false;
@@ -746,7 +746,7 @@ static bool ndef_ul_parse(const NfcDevice* device, FuriString* parsed_data) {
 
     // Calculate usable data area
     const uint8_t* start = &data->page[4].data[0];
-    const uint8_t* end = start + (cc->data_area_size * 2 * MF_ULTRALIGHT_PAGE_SIZE);
+    const uint8_t* end = start + (cc->data_area_size * 8);
     size_t max_size = mf_ultralight_get_pages_total(data->type) * MF_ULTRALIGHT_PAGE_SIZE;
     end = MIN(end, &data->page[0].data[0] + max_size);
 
