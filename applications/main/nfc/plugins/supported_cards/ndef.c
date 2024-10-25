@@ -17,6 +17,7 @@
 
 #include <nfc/protocols/mf_ultralight/mf_ultralight.h>
 #include <nfc/protocols/mf_classic/mf_classic.h>
+#include <nfc/protocols/slix/slix.h>
 
 #include <bit_lib.h>
 
@@ -25,7 +26,8 @@
 #define NDEF_PROTO_INVALID (-1)
 #define NDEF_PROTO_UL      (0)
 #define NDEF_PROTO_MFC     (1)
-#define NDEF_PROTO_TOTAL   (2)
+#define NDEF_PROTO_SLIX    (2)
+#define NDEF_PROTO_TOTAL   (3)
 
 #if !defined(NDEF_PROTO) || NDEF_PROTO <= NDEF_PROTO_INVALID || NDEF_PROTO >= NDEF_PROTO_TOTAL
 #error Must specify what protocol to use with NDEF_PROTO define!
@@ -134,6 +136,11 @@ typedef struct {
         const MfClassicBlock* blocks;
         size_t size;
     } mfc;
+#elif NDEF_PROTO == NDEF_PROTO_SLIX
+    struct {
+        const uint8_t* start;
+        size_t size;
+    } slix;
 #endif
 } Ndef;
 
@@ -193,6 +200,13 @@ static bool ndef_get(Ndef* ndef, size_t pos, size_t len, void* buf) {
         }
     }
 
+    return true;
+
+#elif NDEF_PROTO == NDEF_PROTO_SLIX
+
+    // Memory space is contiguous, simply need to remap to data pointer
+    if(pos + len > ndef->slix.size) return false;
+    memcpy(buf, ndef->slix.start + pos, len);
     return true;
 
 #else
@@ -889,6 +903,65 @@ static bool ndef_mfc_parse(const NfcDevice* device, FuriString* parsed_data) {
     return total_parsed > 0;
 }
 
+#elif NDEF_PROTO == NDEF_PROTO_SLIX
+
+// SLIX NDEF memory layout:
+// https://community.nxp.com/pwmxy87654/attachments/pwmxy87654/nfc/7583/1/EEOL_2011FEB16_EMS_RFD_AN_01.pdf
+static bool ndef_slix_parse(const NfcDevice* device, FuriString* parsed_data) {
+    furi_assert(device);
+    furi_assert(parsed_data);
+
+    const Iso15693_3Data* data = nfc_device_get_data(device, NfcProtocolIso15693_3);
+    const uint8_t block_size = iso15693_3_get_block_size(data);
+    const uint16_t block_count = iso15693_3_get_block_count(data);
+    const uint8_t* blocks = simple_array_cget_data(data->block_data);
+
+    // TODO: Find some way to check for other iso15693 NDEF cards and
+    // split this to also support non-slix iso15693 NDEF tags
+    // Rest of the code works on iso15693 too, but uses SLIX layout assumptions
+    if(block_size != SLIX_BLOCK_SIZE) {
+        return false;
+    }
+
+    // Check Capability Container (CC) values
+    struct {
+        uint8_t nfc_magic_number;
+        uint8_t read_write_access       : 4; // Reversed due to endianness
+        uint8_t document_version_number : 4;
+        uint8_t data_area_size; // Total byte size / 8, includes block 0
+        uint8_t mbread_ipread;
+    }* cc = (void*)&blocks[0 * block_size];
+    if(cc->nfc_magic_number != 0xE1) return false;
+    if(cc->document_version_number != 0x4) return false;
+
+    // Calculate usable data area
+    const uint8_t* start = &blocks[1 * block_size];
+    const uint8_t* end = blocks + (cc->data_area_size * 8);
+    size_t max_size = block_count * block_size;
+    end = MIN(end, blocks + max_size);
+
+    NDEF_TITLE(device, parsed_data);
+
+    Ndef ndef = {
+        .output = parsed_data,
+        .slix =
+            {
+                .start = start,
+                .size = end - start,
+            },
+    };
+    size_t parsed = ndef_parse_tlv(&ndef, 0, 0);
+
+    if(parsed) {
+        furi_string_trim(parsed_data, "\n");
+        furi_string_cat(parsed_data, "\n");
+    } else {
+        furi_string_reset(parsed_data);
+    }
+
+    return parsed > 0;
+}
+
 #endif
 
 // ---=== boilerplate ===---
@@ -903,6 +976,9 @@ static const NfcSupportedCardsPlugin ndef_plugin = {
 #elif NDEF_PROTO == NDEF_PROTO_MFC
     .parse = ndef_mfc_parse,
     .protocol = NfcProtocolMfClassic,
+#elif NDEF_PROTO == NDEF_PROTO_SLIX
+    .parse = ndef_slix_parse,
+    .protocol = NfcProtocolSlix,
 #endif
 };
 
