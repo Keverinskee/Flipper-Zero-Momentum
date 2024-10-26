@@ -531,8 +531,6 @@ static bool ndef_parse_wifi(Ndef* ndef, size_t pos, size_t len) {
 
 // ---=== ndef layout parsing ===---
 
-bool ndef_parse_message(Ndef* ndef, size_t pos, size_t len, size_t message_num, bool smart_poster);
-size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_parsed);
 bool ndef_parse_record(
     Ndef* ndef,
     size_t pos,
@@ -540,6 +538,8 @@ bool ndef_parse_record(
     NdefTnf tnf,
     const char* type,
     uint8_t type_len);
+bool ndef_parse_message(Ndef* ndef, size_t pos, size_t len, size_t message_num, bool smart_poster);
+size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_parsed);
 
 bool ndef_parse_record(
     Ndef* ndef,
