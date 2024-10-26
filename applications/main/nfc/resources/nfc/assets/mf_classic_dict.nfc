@@ -2321,6 +2321,10 @@ D881B675D881
 # Volgograd (Russia) Volna transport cards keys
 2B787A063D5D
 D37C8F1793F7
+# H World Hotel Chain Room Keys
+543071543071
+5F01015F0101
+200510241234
 # +----------------------------------------------------------------------------------------------------------------------------+
 # | https://github.com/DarkFlippers/unleashed-firmware/blob/dev/applications/main/nfc/resources/nfc/assets/mf_classic_dict.nfc |
 # +----------------------------------------------------------------------------------------------------------------------------+
@@ -2400,6 +2404,8 @@ FE98F38F3EE2
 555D8BBC2D3E
 78DF1176C8FD
 ADC169F922CB
+# iq aparts hotel
+505209266A1F
 # +------------------------------------------------------------------------------------------------------------------------+
 # | https://github.com/Flipper-XFW/Xtreme-Firmware/blob/dev/applications/main/nfc/resources/nfc/assets/mf_classic_dict.nfc |
 # +------------------------------------------------------------------------------------------------------------------------+
@@ -2495,6 +2501,18 @@ EA19E58DD046
 3F41891454EE
 7EDAE7923287
 11DDA4862A1C
+# +------------------------------------------------------------------------------------------------------------------------+
+# | https://github.com/Next-Flip/Momentum-Firmware/blob/dev/applications/main/nfc/resources/nfc/assets/mf_classic_dict.nfc |
+# +------------------------------------------------------------------------------------------------------------------------+
+##############################################
+# BG Hotels - keys from Bulgaria
+# Found with FlipperNestedRecovery by Z3r0L1nk
+8000806B5072
+8430A669558C
+1202165D4EAB
+B02094F92A71
+0402B44FB679
+A23412F92811
 # +---------------------------------------------------------------------+
 # | https://github.com/Stepzor11/NFC_keys/blob/main/mf_classic_dict.nfc |
 # +---------------------------------------------------------------------+

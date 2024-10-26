@@ -1,30 +1,197 @@
-### Note:
-- This is a smaller release due to the bugfixes it contains, make sure to also read the changelog for [mntm-006](https://github.com/Next-Flip/Momentum-Firmware/releases/tag/mntm-006)
+### Breaking Changes:
+- OFW: Battery: Rework gauge driver initialization routine (by @skotopes)
+  - Reworks how communication with battery guage is done, improves reliability and fixes issues with battery percentage not showing
+  - After installing firmware with this change, downgrading to old firmware will cause battery percentage to be blank
+  - If you must downgrade firmware, use the [Guage Tool app](https://github.com/skotopes/flipperzero_gauge_tool) to unseal the guage
+- OFW: JS: Modules backport & overhaul (by @portasynthinca3), backport of backport (by @Willy-JL & @xMasterX)
+  - OFW backported some modules we had, added lots of new stuff, and overhauled many other things
+  - Non-exhaustive list of changes to help you fix your scripts:
+    - `badusb`:
+      - `setup()`: `mfr_name`, `prod_name`, `layout_path` parameters renamed to `mfrName`, `prodName`, `layoutPath`
+      - effort required to update old scripts using badusb: very minimal
+    - `dialog`:
+      - removed, now replaced by `gui/dialog` and `gui/file_picker` (see below)
+    - `event_loop`:
+      - new module, allows timer functionality, callbacks and event-driven programming, used heavily alongside gpio and gui modules
+    - `gpio`:
+      - fully overhauled, now you `get()` pin instances and perform actions on them like `.init()`
+      - now supports interrupts, callbacks and more cool things
+      - effort required to update old scripts using gpio: moderate
+    - `gui`:
+      - new module, fully overhauled, replaces dialog, keyboard, submenu, textbox modules
+      - higher barrier to entry than older modules (requires usage of `event_loop` and `gui.viewDispatcher`), but much more flexible, powerful and easier to extend
+      - includes all previously available js gui functionality (except `widget`), and also adds `gui/loading` and `gui/empty_screen` views
+      - currently `gui/file_picker` works different than other new view objects, it is a simple `.pickFile()` synchronous function, but this [may change later](https://github.com/flipperdevices/flipperzero-firmware/pull/3961#discussion_r1805579153)
+      - effort required to update old scripts using gui: extensive
+    - `keyboard`:
+      - removed, now replaced by `gui/text_input` and `gui/byte_input` (see above)
+    - `math`:
+      - `is_equal()` renamed to `isEqual()`
+    - `storage`:
+      - fully overhauled, now you `openFile()`s and perform actions on them like `.read()`
+      - now supports many more operations including different open modes, directories and much more
+      - `virtualInit()`, `virtualMount()`, `virtualQuit()` still work the same
+      - effort required to update old scripts using storage: moderate
+    - `submenu`:
+      - removed, now replaced by `gui/submenu` (see above)
+    - `textbox`:
+      - removed, now replace by `gui/text_box` (see above)
+    - `widget`:
+      - only gui functionality not ported to new gui module, remains unchanged for now but likely to be ported later on
+    - globals:
+      - `__filepath` and `__dirpath` renamed to `__filename` and `__dirname` like in nodejs
+      - `to_string()` renamed and moved to number class as `n.toString()`, now supports optional base parameter
+      - `to_hex_string()` removed, now use `n.toString(16)`
+      - `parse_int()` renamed to `parseInt()`, now supports optional base parameter
+      - `to_upper_case()` and `to_lower_case()` renamed and moved to string class as `s.toUpperCase()` and `s.toLowerCase()`
+      - effort required to update old scripts using these: minimal
+  - Added type definitions (typescript files for type checking in IDE, Flipper does not run typescript)
+  - Documentation is incomplete and deprecated, from now on you should refer to type definitions (`applications/system/js_app/types`), those will always be correct
+  - Type definitions for extra modules we have that OFW doesn't will come later
 
 ### Added:
 - Apps:
-  - Games: Laser Tag (by @RocketGod-git & @jamisonderek)
-- NFC: Added new Saflok parser (#196 #201 by @zinongli & @xtruan & @zacharyweiss & @evilmog & @Arkwin)
-- OFW: Desktop: New Procrastination dolphin animation (by @Astrrra)
+  - NFC: Cyborg Detector (by @RocketGod-git)
+  - Sub-GHz: Radio Scanner (by @RocketGod-git)
+  - Games: Umpire Indicator (by @RocketGod-git)
+- Sub-GHz:
+  - Show satellites count with an icon (#215 by @m7i-org)
+  - Add Bresser 3CH weather station protocol (#217 #245 by @m7i-org)
+  - Add Vauno-EN8822 weather station protocol (#262 by @m7i-org)
+  - UL: Add Marantec24 protocol (static 24 bit) with add manually (by @xMasterX)
+  - UL: Add GangQi protocol (static 34 bit) with button parsing and add manually (by @xMasterX & @Skorpionm)
+  - UL: Add Hollarm protocol (static 42 bit) with button parsing and add manually (by @xMasterX & @Skorpionm)
+  - UL: Add Hay21 protocol (dynamic 21 bit) with button parsing (by @xMasterX)
+  - UL: Add Keeloq Monarch full support, with add manually (by anonymous UL contributor)
+  - UL: Princeton custom buttons support (by @xMasterX)
+- NFC:
+  - OFW: MIFARE Classic Key Recovery Improvements (PR 3822 by @noproto)
+    - Accelerated dictionary attack: dictionary attacks reduced to several seconds - checks ~3500 keys per second
+    - Nested attack support: collects nested nonces to be cracked by MFKey, no longer requiring Flipper Nested app
+    - Static encrypted backdoor support: collects static encrypted nonces to be cracked by MFKey using NXP/Fudan backdoor, allowing key recovery of all non-hardened MIFARE Classic tags on-device
+  - Add SmartRider Parser (#203 by @jaylikesbunda)
+  - Add API to enforce ISO15693 mode (#225 by @aaronjamt)
+  - OFW: H World Hotel Chain Room Key Parser and MFC keys (by @zinongli)
+  - OFW: Parser for Tianjin Railway Transit (by @zinongli)
+- Infrared:
+  - Bluray/DVD Universal Remote (#250 #264 by @jaylikesbunda)
+  - Option to "Load from Library File" for Universal Remotes (#255 by @zxkmm)
+- Updater: New Yappy themed icon while updating (#253 by @the1anonlypr3 & @Kuronons & @nescap)
+- JS:
+  - New `i2c` module (#259 by @jamisonderek)
+  - New `spi` module (#272 by @jamisonderek)
+- BadKB:
+  - OFW: Add linux/gnome badusb demo files (by @thomasnemer)
+  - Add older qFlipper install demos for windows and macos (by @DXVVAY & @grugnoymeme)
+  - OFW: New layout for es-LA (by @IRecabarren)
+- OFW: Dolphin: Happy mode in Desktop settings (by @portasynthinca3)
+- OFW: CLI: Improvements part I, `neofetch` command (by @portasynthinca3), fix for lab.flipper.net (by @xMasterX)
+- GUI:
+  - OFW: Add up and down button drawing functions to GUI elements (by @DerSkythe)
+  - OFW: Extended icon draw function in Canvas (by @RebornedBrain)
+- OFW: RPC: Support 5V on GPIO control for ext. modules (by @gsurkov)
+- OFW: Toolbox: Proper integer parsing library `strint` (by @portasynthinca3)
+- OFW: Furi: Put errno into TCB (by @portasynthinca3)
 
 ### Updated:
 - Apps:
-  - Picopass: CVE-2024-41566, When keys are unknown emulate with a dummy MAC and ignore reader MACs (by @nvx)
-  - Seader: Card parsing and saving UI and logic improvements (by @bettse)
-  - Authenticator: Confirm token export on Flipper (by @akopachov)
-  - NFC Playlist: Allow delay up to 12s (by @xtruan)
-  - BLE Spam: Fix delay help section (by @Willy-JL)
-  - WAV Player: Fix unresponsiveness (by @Willy-JL)
+  - MFKey: Added Static Encrypted Nested key recovery, Added NFC app support, Dropped FlipperNested support (by @noproto)
+  - WAV Player: Better fix for unresponsiveness, handle thread exit signal (by @CookiePLMonster)
+  - Laser Tag: External Infrared board support, crash fixes (by @RocketGod-git), RFID support for ammo reload, thread leak fix (by @jamisonderek)
+  - ESP Flasher: Update blackmagic bin with WiFi Logs (by @DrZlo13), support more board types (by @xMasterX)
+  - Picopass: File loading improvements and fixes (by @bettse), force ISO15693 1OutOf4 mode (by @aaronjamt)
+  - Quac!: External IR board support (by @daniilty), import all IR from file, iButton support, code improvements (by @rdefeo)
+  - DTMF Dolphin: Add EAS tone support (by @JendrBendr)
+  - NFC Playlist: Error screens for playlist already exists and item already in playlist, general improvements (by @acegoal07), refactor rename/new scene without thread (by @Willy-JL)
+  - CLI-GUI Bridge: Fixes and improvements (by @ranchordo)
+  - Seader: Enable T=1, show error for timeout, fix wrong LRC logging, fix crash scanning NTAG215 with MFC option (by @bettse)
+  - BLE Spam: Fix menu index callback (by @Willy-JL)
+  - Solitaire: App rewrite, Added quick solve, New effects and sounds, Removed hacky canvas manipulation (by @doofy-dev)
+  - CLI-GUI Bridge: Add more symbols to keyboard (#222 by @Willy-JL)
+  - UL: Sub-GHz Bruteforcer: Add new protocols for existing dump option (by @xMasterX), use FW functions for top buttons (by @DerSkythe)
+  - UL: NRF24 Apps: Use string library compatible with OFW SDK (by @xMasterX)
+  - UL: W5500 Ethernet: Various fixes and improvements (by @xMasterX)
+  - OFW: SPI Mem Manager: Fixed UI rendering bug related to line breaks (by @portasynthinca3)
+  - OFW: USB/BT Remote: Mouse clicker option to click as fast as possible (by @sumukhj1219)
+- CLI: Print plugin name on load fail (by @Willy-JL)
+- NFC:
+  - NDEF Parser:
+    - Mifare Classic support (#265 by @luu176), protocol-agnostic rewrite and more improvements (#265 by @Willy-JL)
+    - SLIX support, parse even with TLV terminator omitted, parse empty NDEF TLVs (#278 by @Willy-JL)
+    - Decoding of URL-encoded URI characters (#267 by @jaylikesbunda)
+    - SmartPoster record support (#275 by @Willy-JL)
+    - Enable parsing NTAG I2C Plus 1k and 2k chips too (#237 by @RocketGod-git)
+  - Added 6 new Mifare Classic keys from Bulgaria Hotel (#216 by @z3r0l1nk)
+  - UL: Add iq aparts hotel key (by @xMasterX)
+  - OFW/UL: Rename 'Detect Reader' to 'Extract MFC Keys' (by @bettse & @xMasterX)
+  - OFW: Plantain parser improvements (by @assasinfil)
+  - OFW: Moscow social card parser (by @assasinfil)
+  - OFW: Fixes and improvements to iso14443_4a listener and poller (by @RebornedBrain)
+  - OFW: Update BART station codes in Clipper plugin (by @ted-logan)
 - Sub-GHz:
-  - Show Weather Station icon for WS signals (by @Willy-JL)
-  - Update Oregon 2 and 3 weather info display to new design (by @Willy-JL)
-- API: Publishing T5577 page 1 block count macro (by @zinongli)
+  - UL: Frequency analyzer fixes and improvements (by @xMasterX):
+    - Enforce int module (like in OFW) usage due to lack of required hardware on external boards (PathIsolate (+rf switch for multiple paths)) and incorrect usage and/or understanding the purpose of frequency analyzer app by users, it should be used only to get frequency of the remote placed around 1-10cm around flipper's left corner
+    - Fix possible GSM mobile towers signal interference by limiting upper frequency to 920mhz max
+    - Fix duplicated frequency lists and use user config for nearest frequency selector too
+  - Nexus-TH weather station protocol improvements on detection (#256 by @m7i-org)
+- Infrared:
+  - Additions to MNTM specific LED, Digital Sign, Monitor universal remotes from IRDB (#240 by @jaylikesbunda)
+  - UL: Replace LEDs universal remote with new one by Unleashed team, includes color options (by @amec0e & @xMasterX)
+  - UL: Update universal remote assets (by @amec0e)
+  - OFW: IR button operation fails now shows more informative messages (by @RebornedBrain)
+  - OFW: Add Airwell AW-HKD012-N91 to univeral AC remote (by @valeraOlexienko)
+  - OFW: Add TCL 75S451 to TV universal remote (by @christhetech131)
+  - OFW: Universal remote additions (by @jaylikesbunda)
+  - OFW: Heavily Expand Universal Remotes (by @jaylikesbunda)
+- OFW: BadKB: Improve ChromeOS and GNOME demo scripts (by @kowalski7cc)
+- OFW: GUI: Change dialog_ex text ownership model (by @skotopes)
+- OFW: CCID: App changes and improvements (by @kidbomb)
+- OFW: API: Exposed `view_dispatcher_get_event_loop` (by @CookiePLMonster)
+- Furi:
+  - UL: Extra checks for OTG power enable/disable (by @xMasterX)
+  - OFW: Replace all calls to strncpy with strlcpy, use strdup more, expose strlcat (by @CookiePLMonster)
+  - OFW: Threading, Timers improvements (by @CookiePLMonster)
+  - OFW: FuriTimer uses an event instead of a volatile bool to wait for deletion (by @CookiePLMonster)
+  - OFW: Improve FuriThread state callbacks (by @CookiePLMonster)
+  - OFW: Increased heap size (by @hedger)
+- Documentation:
+  - OFW: Update and cleanup (by @rnadyrshin)
+  - OFW: Improve bit_buffer.h docs (by @Astrrra)
+  - OFW: Wi-Fi Devboard documentation rework (by @rnadyrshin)
 
 ### Fixed:
-- Sub-GHz: Fix Acurite 986 temperature value conversion (by @Willy-JL)
+- RFID:
+  - OFW: Fix detection of GProx II cards and false detection of other cards (by @Astrrra)
+  - OFW: Fix Guard GProxII False Positive and 36-bit Parsing (by @zinongli)
+  - OFW: GProxII Fix Writing and Rendering Conflict (by @zinongli)
 - Desktop:
-  - Fix disabling keybinds (by @Willy-JL)
-  - Sanity check PIN length for good measure (by @Willy-JL)
-  - Fix PIN locked with no PIN set edge case (by @Willy-JL)
-- Settings: Fix duplicates in Power Settings when opening submenus (by @Willy-JL)
-- RGB Backlight: Fix config migration (by @Willy-JL)
+  - Fallback Poweroff prompt when power settings is unavailable (by @Willy-JL)
+- Sub-GHz:
+  - Fix GPS "Latitute" typo, switch to "Lat" and "Lon" in .sub files (#246 by @m7i-org)
+  - UL: Fix zero issues in Princeton (by @xMasterX)
+- Power: Suppress Shutdown on Idle While Charging / Plugged In (#244 by @luu176)
+- Storage:
+  - Fallback SD format prompt when storage settings is unavailable (by @Willy-JL)
+  - OFW: Fix folder rename fails (by @portasynthinca3)
+- About: Fix BLE stack version string (by @Willy-JL)
+- OFW: Loader: Warn about missing SD card for main apps (by @Willy-JL)
+- NFC:
+  - UL: Read Ultralight block by block (by @mishamyte)
+  - OFW: Fix crash on Ultralight unlock (by @Astrrra)
+  - OFW: FeliCa anti-collision fix (by @RebornedBrain)
+  - OFW: Emulation freeze fixed when pressing OK repeatedly (by @RebornedBrain)
+- OFW: RPC: Broken file interaction fixes (by @RebornedBrain)
+- OFW: GPIO: Fix USB-UART bridge exit screen stopping the bridge prematurely (by @portasynthinca3)
+- OFW: GUI: Fix dialog_ex NULL ptr crash (by @Willy-JL)
+- Furi:
+  - OFW: Clean up of LFS traces (by @hedger)
+  - OFW: Prevent idle priority threads from potentially starving the FreeRTOS idle task (by @CookiePLMonster)
+  - OFW: Wait for RNG ready state and no errors before sampling (by @n1kolasM)
+  - OFW: A Lot of Fixes (by @skotopes)
+- OFW: CLI: Add warning about stealth mode in vibro command (by @ivanbarsukov)
+- OFW: Debug: Use proper hook for handle_exit in flipperapps (by @skotopes)
+- OFW: API: Fix kerel typo in documentation (by @EntranceJew)
+
+### Removed:
+- Apps:
+  - Mifare Nested: Superseded by NFC app after OFW PR 3822 (MIFARE Classic Key Recovery Improvements)

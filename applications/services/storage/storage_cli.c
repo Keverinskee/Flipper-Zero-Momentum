@@ -2,9 +2,11 @@
 #include <furi_hal.h>
 
 #include <cli/cli.h>
+#include <cli/cli_ansi.h>
 #include <lib/toolbox/args.h>
-#include <lib/toolbox/md5_calc.h>
 #include <lib/toolbox/dir_walk.h>
+#include <lib/toolbox/md5_calc.h>
+#include <lib/toolbox/strint.h>
 #include <lib/toolbox/tar/tar_archive.h>
 #include <storage/storage.h>
 #include <storage/storage_sd_api.h>
@@ -223,7 +225,7 @@ static void storage_cli_write(Cli* cli, FuriString* path, FuriString* args) {
         while(true) {
             uint8_t symbol = cli_getc(cli);
 
-            if(symbol == CliSymbolAsciiETX) {
+            if(symbol == CliKeyETX) {
                 size_t write_size = read_index % buffer_size;
 
                 if(write_size > 0) {
@@ -267,9 +269,8 @@ static void storage_cli_read_chunks(Cli* cli, FuriString* path, FuriString* args
     File* file = storage_file_alloc(api);
 
     uint32_t buffer_size;
-    int parsed_count = sscanf(furi_string_get_cstr(args), "%lu", &buffer_size);
-
-    if(parsed_count != 1) {
+    if(strint_to_uint32(furi_string_get_cstr(args), NULL, &buffer_size, 10) !=
+       StrintParseNoError) {
         storage_cli_print_usage();
     } else if(storage_file_open(file, furi_string_get_cstr(path), FSAM_READ, FSOM_OPEN_EXISTING)) {
         uint64_t file_size = storage_file_size(file);
@@ -307,9 +308,8 @@ static void storage_cli_write_chunk(Cli* cli, FuriString* path, FuriString* args
     File* file = storage_file_alloc(api);
 
     uint32_t buffer_size;
-    int parsed_count = sscanf(furi_string_get_cstr(args), "%lu", &buffer_size);
-
-    if(parsed_count != 1) {
+    if(strint_to_uint32(furi_string_get_cstr(args), NULL, &buffer_size, 10) !=
+       StrintParseNoError) {
         storage_cli_print_usage();
     } else {
         if(storage_file_open(file, furi_string_get_cstr(path), FSAM_WRITE, FSOM_OPEN_APPEND)) {

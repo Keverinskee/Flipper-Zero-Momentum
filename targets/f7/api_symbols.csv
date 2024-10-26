@@ -1,5 +1,5 @@
 entry,status,name,type,params
-Version,+,72.1,,
+Version,+,77.2,,
 Header,+,applications/drivers/subghz/cc1101_ext/cc1101_ext_interconnect.h,,
 Header,+,applications/main/archive/helpers/archive_helpers_ext.h,,
 Header,+,applications/main/subghz/subghz_fap.h,,
@@ -251,6 +251,7 @@ Header,+,lib/toolbox/stream/buffered_file_stream.h,,
 Header,+,lib/toolbox/stream/file_stream.h,,
 Header,+,lib/toolbox/stream/stream.h,,
 Header,+,lib/toolbox/stream/string_stream.h,,
+Header,+,lib/toolbox/strint.h,,
 Header,+,lib/toolbox/tar/tar_archive.h,,
 Header,+,lib/toolbox/value_index.h,,
 Header,+,lib/toolbox/varint.h,,
@@ -841,6 +842,7 @@ Function,+,canvas_draw_str,void,"Canvas*, int32_t, int32_t, const char*"
 Function,+,canvas_draw_str_aligned,void,"Canvas*, int32_t, int32_t, Align, Align, const char*"
 Function,+,canvas_draw_triangle,void,"Canvas*, int32_t, int32_t, size_t, size_t, CanvasDirection"
 Function,+,canvas_draw_xbm,void,"Canvas*, int32_t, int32_t, size_t, size_t, const uint8_t*"
+Function,+,canvas_draw_xbm_ex,void,"Canvas*, int32_t, int32_t, size_t, size_t, IconRotation, const uint8_t*"
 Function,+,canvas_get_font_params,const CanvasFontParameters*,"const Canvas*, Font"
 Function,+,canvas_glyph_width,size_t,"Canvas*, uint16_t"
 Function,+,canvas_height,size_t,const Canvas*
@@ -907,10 +909,15 @@ Function,+,crypto1_alloc,Crypto1*,
 Function,+,crypto1_bit,uint8_t,"Crypto1*, uint8_t, int"
 Function,+,crypto1_byte,uint8_t,"Crypto1*, uint8_t, int"
 Function,+,crypto1_decrypt,void,"Crypto1*, const BitBuffer*, BitBuffer*"
+Function,+,crypto1_decrypt_nt_enc,uint32_t,"uint32_t, uint32_t, MfClassicKey"
 Function,+,crypto1_encrypt,void,"Crypto1*, uint8_t*, const BitBuffer*, BitBuffer*"
 Function,+,crypto1_encrypt_reader_nonce,void,"Crypto1*, uint64_t, uint32_t, uint8_t*, uint8_t*, BitBuffer*, _Bool"
 Function,+,crypto1_free,void,Crypto1*
 Function,+,crypto1_init,void,"Crypto1*, uint64_t"
+Function,+,crypto1_is_weak_prng_nonce,_Bool,uint32_t
+Function,+,crypto1_lfsr_rollback_word,uint32_t,"Crypto1*, uint32_t, int"
+Function,+,crypto1_nonce_matches_encrypted_parity_bits,_Bool,"uint32_t, uint32_t, uint8_t"
+Function,+,crypto1_prng_successor,uint32_t,"uint32_t, uint32_t"
 Function,+,crypto1_reset,void,Crypto1*
 Function,+,crypto1_word,uint32_t,"Crypto1*, uint32_t, int"
 Function,-,ctermid,char*,char*
@@ -968,14 +975,16 @@ Function,+,dir_walk_read,DirWalkResult,"DirWalk*, FuriString*, FileInfo*"
 Function,+,dir_walk_set_filter_cb,void,"DirWalk*, DirWalkFilterCb, void*"
 Function,+,dir_walk_set_recurse_filter,void,"DirWalk*, const char**, size_t"
 Function,+,dir_walk_set_recursive,void,"DirWalk*, _Bool"
-Function,-,div,div_t,"int, int"
+Function,+,div,div_t,"int, int"
 Function,+,dolphin_deed,void,DolphinDeed
 Function,+,dolphin_deed_get_app,DolphinApp,DolphinDeed
 Function,+,dolphin_deed_get_app_limit,uint8_t,DolphinApp
 Function,+,dolphin_deed_get_weight,uint8_t,DolphinDeed
 Function,+,dolphin_flush,void,Dolphin*
 Function,+,dolphin_get_pubsub,FuriPubSub*,Dolphin*
+Function,+,dolphin_get_settings,void,"Dolphin*, DolphinSettings*"
 Function,+,dolphin_reload_state,void,Dolphin*
+Function,+,dolphin_set_settings,void,"Dolphin*, DolphinSettings*"
 Function,+,dolphin_stats,DolphinStats,Dolphin*
 Function,+,dolphin_upgrade_level,void,Dolphin*
 Function,-,dprintf,int,"int, const char*, ..."
@@ -986,8 +995,10 @@ Function,+,elements_bold_rounded_frame,void,"Canvas*, int32_t, int32_t, size_t, 
 Function,+,elements_bubble,void,"Canvas*, int32_t, int32_t, size_t, size_t"
 Function,+,elements_bubble_str,void,"Canvas*, int32_t, int32_t, const char*, Align, Align"
 Function,+,elements_button_center,void,"Canvas*, const char*"
+Function,+,elements_button_down,void,"Canvas*, const char*"
 Function,+,elements_button_left,void,"Canvas*, const char*"
 Function,+,elements_button_right,void,"Canvas*, const char*"
+Function,+,elements_button_up,void,"Canvas*, const char*"
 Function,+,elements_frame,void,"Canvas*, int32_t, int32_t, size_t, size_t"
 Function,+,elements_multiline_text,void,"Canvas*, int32_t, int32_t, const char*"
 Function,+,elements_multiline_text_aligned,void,"Canvas*, int32_t, int32_t, Align, Align, const char*"
@@ -1252,6 +1263,7 @@ Function,-,ftello,off_t,FILE*
 Function,-,ftrylockfile,int,FILE*
 Function,-,funlockfile,void,FILE*
 Function,-,funopen,FILE*,"const void*, int (*)(void*, char*, int), int (*)(void*, const char*, int), fpos_t (*)(void*, fpos_t, int), int (*)(void*)"
+Function,-,furi_background,void,
 Function,+,furi_delay_ms,void,uint32_t
 Function,+,furi_delay_tick,void,uint32_t
 Function,+,furi_delay_until_tick,FuriStatus,uint32_t
@@ -1264,6 +1276,7 @@ Function,+,furi_event_flag_set,uint32_t,"FuriEventFlag*, uint32_t"
 Function,+,furi_event_flag_wait,uint32_t,"FuriEventFlag*, uint32_t, uint32_t, uint32_t"
 Function,+,furi_event_loop_alloc,FuriEventLoop*,
 Function,+,furi_event_loop_free,void,FuriEventLoop*
+Function,+,furi_event_loop_is_subscribed,_Bool,"FuriEventLoop*, FuriEventLoopObject*"
 Function,+,furi_event_loop_pend_callback,void,"FuriEventLoop*, FuriEventLoopPendingCallback, void*"
 Function,+,furi_event_loop_run,void,FuriEventLoop*
 Function,+,furi_event_loop_stop,void,FuriEventLoop*
@@ -1493,7 +1506,7 @@ Function,+,furi_hal_nfc_abort,FuriHalNfcError,
 Function,+,furi_hal_nfc_acquire,FuriHalNfcError,
 Function,+,furi_hal_nfc_event_start,FuriHalNfcError,
 Function,+,furi_hal_nfc_event_stop,FuriHalNfcError,
-Function,+,furi_hal_nfc_felica_listener_set_sensf_res_data,FuriHalNfcError,"const uint8_t*, const uint8_t, const uint8_t*, const uint8_t"
+Function,+,furi_hal_nfc_felica_listener_set_sensf_res_data,FuriHalNfcError,"const uint8_t*, const uint8_t, const uint8_t*, const uint8_t, const uint16_t"
 Function,+,furi_hal_nfc_field_detect_start,FuriHalNfcError,
 Function,+,furi_hal_nfc_field_detect_stop,FuriHalNfcError,
 Function,+,furi_hal_nfc_field_is_present,_Bool,
@@ -1505,6 +1518,9 @@ Function,+,furi_hal_nfc_iso14443a_poller_trx_short_frame,FuriHalNfcError,FuriHal
 Function,+,furi_hal_nfc_iso14443a_poller_tx_custom_parity,FuriHalNfcError,"const uint8_t*, size_t"
 Function,+,furi_hal_nfc_iso14443a_rx_sdd_frame,FuriHalNfcError,"uint8_t*, size_t, size_t*"
 Function,+,furi_hal_nfc_iso14443a_tx_sdd_frame,FuriHalNfcError,"const uint8_t*, size_t"
+Function,+,furi_hal_nfc_iso15693_detect_mode,FuriHalNfcError,
+Function,+,furi_hal_nfc_iso15693_force_1outof256,FuriHalNfcError,
+Function,+,furi_hal_nfc_iso15693_force_1outof4,FuriHalNfcError,
 Function,+,furi_hal_nfc_iso15693_listener_tx_sof,FuriHalNfcError,
 Function,+,furi_hal_nfc_listener_enable_rx,FuriHalNfcError,
 Function,+,furi_hal_nfc_listener_idle,FuriHalNfcError,
@@ -1583,6 +1599,8 @@ Function,-,furi_hal_resources_deinit_early,void,
 Function,+,furi_hal_resources_get_ext_pin_number,int32_t,const GpioPin*
 Function,-,furi_hal_resources_init,void,
 Function,-,furi_hal_resources_init_early,void,
+Function,+,furi_hal_resources_pin_by_name,const GpioPinRecord*,const char*
+Function,+,furi_hal_resources_pin_by_number,const GpioPinRecord*,uint8_t
 Function,+,furi_hal_rfid_comp_set_callback,void,"FuriHalRfidCompCallback, void*"
 Function,+,furi_hal_rfid_comp_start,void,
 Function,+,furi_hal_rfid_comp_stop,void,
@@ -1924,7 +1942,6 @@ Function,+,furi_thread_list_free,void,FuriThreadList*
 Function,+,furi_thread_list_get_at,FuriThreadListItem*,"FuriThreadList*, size_t"
 Function,+,furi_thread_list_get_isr_time,float,FuriThreadList*
 Function,+,furi_thread_list_get_or_insert,FuriThreadListItem*,"FuriThreadList*, FuriThread*"
-Function,+,furi_thread_list_process,void,"FuriThreadList*, uint32_t, uint32_t"
 Function,+,furi_thread_list_size,size_t,FuriThreadList*
 Function,+,furi_thread_resume,void,FuriThreadId
 Function,+,furi_thread_set_appid,void,"FuriThread*, const char*"
@@ -1945,6 +1962,7 @@ Function,+,furi_thread_stdout_write,size_t,"const char*, size_t"
 Function,+,furi_thread_suspend,void,FuriThreadId
 Function,+,furi_thread_yield,void,
 Function,+,furi_timer_alloc,FuriTimer*,"FuriTimerCallback, FuriTimerType, void*"
+Function,+,furi_timer_flush,void,
 Function,+,furi_timer_free,void,FuriTimer*
 Function,-,furi_timer_get_current_name,const char*,
 Function,+,furi_timer_get_expire_time,uint32_t,FuriTimer*
@@ -2188,6 +2206,9 @@ Function,+,iso14443_4a_poller_halt,Iso14443_4aError,Iso14443_4aPoller*
 Function,+,iso14443_4a_poller_read_ats,Iso14443_4aError,"Iso14443_4aPoller*, Iso14443_4aAtsData*"
 Function,+,iso14443_4a_poller_send_block,Iso14443_4aError,"Iso14443_4aPoller*, const BitBuffer*, BitBuffer*"
 Function,+,iso14443_4a_poller_send_block_pwt_ext,Iso14443_4aError,"Iso14443_4aPoller*, const BitBuffer*, BitBuffer*"
+Function,+,iso14443_4a_poller_send_chain_block,Iso14443_4aError,"Iso14443_4aPoller*, const BitBuffer*, BitBuffer*"
+Function,+,iso14443_4a_poller_send_receive_ready_block,Iso14443_4aError,"Iso14443_4aPoller*, _Bool, const BitBuffer*, BitBuffer*"
+Function,+,iso14443_4a_poller_send_supervisory_block,Iso14443_4aError,"Iso14443_4aPoller*, _Bool, const BitBuffer*, BitBuffer*"
 Function,+,iso14443_4a_reset,void,Iso14443_4aData*
 Function,+,iso14443_4a_save,_Bool,"const Iso14443_4aData*, FlipperFormat*"
 Function,+,iso14443_4a_set_uid,_Bool,"Iso14443_4aData*, const uint8_t*, size_t"
@@ -2566,6 +2587,7 @@ Function,+,mf_classic_get_base_data,Iso14443_3aData*,const MfClassicData*
 Function,+,mf_classic_get_blocks_num_in_sector,uint8_t,uint8_t
 Function,+,mf_classic_get_device_name,const char*,"const MfClassicData*, NfcDeviceNameType"
 Function,+,mf_classic_get_first_block_num_of_sector,uint8_t,uint8_t
+Function,+,mf_classic_get_key,MfClassicKey,"const MfClassicData*, uint8_t, MfClassicKeyType"
 Function,+,mf_classic_get_read_sectors_and_keys,void,"const MfClassicData*, uint8_t*, uint8_t*"
 Function,+,mf_classic_get_sector_by_block,uint8_t,uint8_t
 Function,+,mf_classic_get_sector_trailer_by_sector,MfClassicSectorTrailer*,"const MfClassicData*, uint8_t"
@@ -2584,10 +2606,10 @@ Function,+,mf_classic_is_sector_read,_Bool,"const MfClassicData*, uint8_t"
 Function,+,mf_classic_is_sector_trailer,_Bool,uint8_t
 Function,+,mf_classic_is_value_block,_Bool,"MfClassicSectorTrailer*, uint8_t"
 Function,+,mf_classic_load,_Bool,"MfClassicData*, FlipperFormat*, uint32_t"
-Function,+,mf_classic_poller_auth,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKey*, MfClassicKeyType, MfClassicAuthContext*"
-Function,+,mf_classic_poller_auth_nested,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKey*, MfClassicKeyType, MfClassicAuthContext*"
-Function,+,mf_classic_poller_get_nt,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKeyType, MfClassicNt*"
-Function,+,mf_classic_poller_get_nt_nested,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKeyType, MfClassicNt*"
+Function,+,mf_classic_poller_auth,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKey*, MfClassicKeyType, MfClassicAuthContext*, _Bool"
+Function,+,mf_classic_poller_auth_nested,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKey*, MfClassicKeyType, MfClassicAuthContext*, _Bool, _Bool"
+Function,+,mf_classic_poller_get_nt,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKeyType, MfClassicNt*, _Bool"
+Function,+,mf_classic_poller_get_nt_nested,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicKeyType, MfClassicNt*, _Bool"
 Function,+,mf_classic_poller_halt,MfClassicError,MfClassicPoller*
 Function,+,mf_classic_poller_read_block,MfClassicError,"MfClassicPoller*, uint8_t, MfClassicBlock*"
 Function,+,mf_classic_poller_send_custom_parity_frame,MfClassicError,"MfClassicPoller*, const BitBuffer*, BitBuffer*, uint32_t"
@@ -2850,13 +2872,16 @@ Function,+,nfc_device_save,_Bool,"NfcDevice*, const char*"
 Function,+,nfc_device_set_data,void,"NfcDevice*, NfcProtocol, const NfcDeviceData*"
 Function,+,nfc_device_set_loading_callback,void,"NfcDevice*, NfcLoadingCallback, void*"
 Function,+,nfc_device_set_uid,_Bool,"NfcDevice*, const uint8_t*, size_t"
-Function,+,nfc_felica_listener_set_sensf_res_data,NfcError,"Nfc*, const uint8_t*, const uint8_t, const uint8_t*, const uint8_t"
+Function,+,nfc_felica_listener_set_sensf_res_data,NfcError,"Nfc*, const uint8_t*, const uint8_t, const uint8_t*, const uint8_t, const uint16_t"
 Function,+,nfc_free,void,Nfc*
 Function,+,nfc_iso14443a_listener_set_col_res_data,NfcError,"Nfc*, uint8_t*, uint8_t, uint8_t*, uint8_t"
 Function,+,nfc_iso14443a_listener_tx_custom_parity,NfcError,"Nfc*, const BitBuffer*"
 Function,+,nfc_iso14443a_poller_trx_custom_parity,NfcError,"Nfc*, const BitBuffer*, BitBuffer*, uint32_t"
 Function,+,nfc_iso14443a_poller_trx_sdd_frame,NfcError,"Nfc*, const BitBuffer*, BitBuffer*, uint32_t"
 Function,+,nfc_iso14443a_poller_trx_short_frame,NfcError,"Nfc*, NfcIso14443aShortFrame, BitBuffer*, uint32_t"
+Function,+,nfc_iso15693_detect_mode,NfcError,Nfc*
+Function,+,nfc_iso15693_force_1outof256,NfcError,Nfc*
+Function,+,nfc_iso15693_force_1outof4,NfcError,Nfc*
 Function,+,nfc_iso15693_listener_tx_sof,NfcError,Nfc*
 Function,+,nfc_listener_alloc,NfcListener*,"Nfc*, NfcProtocol, const NfcDeviceData*"
 Function,+,nfc_listener_free,void,NfcListener*
@@ -2888,6 +2913,7 @@ Function,+,nfc_set_mask_receive_time_fc,void,"Nfc*, uint32_t"
 Function,+,nfc_start,void,"Nfc*, NfcEventCallback, void*"
 Function,+,nfc_stop,void,Nfc*
 Function,+,nfc_util_even_parity32,uint8_t,uint32_t
+Function,+,nfc_util_even_parity8,uint8_t,uint8_t
 Function,+,nfc_util_odd_parity,void,"const uint8_t*, uint8_t*, uint8_t"
 Function,+,nfc_util_odd_parity8,uint8_t,uint8_t
 Function,+,notification_internal_message,void,"NotificationApp*, const NotificationSequence*"
@@ -3003,7 +3029,6 @@ Function,+,powf,float,"float, float"
 Function,-,powl,long double,"long double, long double"
 Function,+,pretty_format_bytes_hex_canonical,void,"FuriString*, size_t, const char*, const uint8_t*, size_t"
 Function,-,printf,int,"const char*, ..."
-Function,+,prng_successor,uint32_t,"uint32_t, uint32_t"
 Function,+,process_favorite_launch,_Bool,char**
 Function,+,property_value_out,void,"PropertyValueContext*, const char*, unsigned int, ..."
 Function,+,protocol_dict_alloc,ProtocolDict*,"const ProtocolBase**, size_t"
@@ -3260,9 +3285,10 @@ Function,+,st25tb_save,_Bool,"const St25tbData*, FlipperFormat*"
 Function,+,st25tb_set_uid,_Bool,"St25tbData*, const uint8_t*, size_t"
 Function,+,st25tb_verify,_Bool,"St25tbData*, const FuriString*"
 Function,+,storage_common_copy,FS_Error,"Storage*, const char*, const char*"
-Function,+,storage_common_equivalent_path,_Bool,"Storage*, const char*, const char*, _Bool"
+Function,+,storage_common_equivalent_path,_Bool,"Storage*, const char*, const char*"
 Function,+,storage_common_exists,_Bool,"Storage*, const char*"
 Function,+,storage_common_fs_info,FS_Error,"Storage*, const char*, uint64_t*, uint64_t*"
+Function,+,storage_common_is_subdir,_Bool,"Storage*, const char*, const char*"
 Function,+,storage_common_merge,FS_Error,"Storage*, const char*, const char*"
 Function,+,storage_common_migrate,FS_Error,"Storage*, const char*, const char*"
 Function,+,storage_common_mkdir,FS_Error,"Storage*, const char*"
@@ -3368,7 +3394,13 @@ Function,-,strerror,char*,int
 Function,-,strerror_l,char*,"int, locale_t"
 Function,-,strerror_r,char*,"int, char*, size_t"
 Function,+,string_stream_alloc,Stream*,
-Function,-,strlcat,size_t,"char*, const char*, size_t"
+Function,+,strint_to_int16,StrintParseError,"const char*, char**, int16_t*, uint8_t"
+Function,+,strint_to_int32,StrintParseError,"const char*, char**, int32_t*, uint8_t"
+Function,+,strint_to_int64,StrintParseError,"const char*, char**, int64_t*, uint8_t"
+Function,+,strint_to_uint16,StrintParseError,"const char*, char**, uint16_t*, uint8_t"
+Function,+,strint_to_uint32,StrintParseError,"const char*, char**, uint32_t*, uint8_t"
+Function,+,strint_to_uint64,StrintParseError,"const char*, char**, uint64_t*, uint8_t"
+Function,+,strlcat,size_t,"char*, const char*, size_t"
 Function,+,strlcpy,size_t,"char*, const char*, size_t"
 Function,+,strlen,size_t,const char*
 Function,-,strlwr,char*,char*
@@ -3727,10 +3759,11 @@ Function,+,view_allocate_model,void,"View*, ViewModelType, size_t"
 Function,+,view_commit_model,void,"View*, _Bool"
 Function,+,view_dispatcher_add_view,void,"ViewDispatcher*, uint32_t, View*"
 Function,+,view_dispatcher_alloc,ViewDispatcher*,
+Function,+,view_dispatcher_alloc_ex,ViewDispatcher*,FuriEventLoop*
 Function,+,view_dispatcher_attach_to_gui,void,"ViewDispatcher*, Gui*, ViewDispatcherType"
 Function,+,view_dispatcher_enable_queue,void,ViewDispatcher*
 Function,+,view_dispatcher_free,void,ViewDispatcher*
-Function,-,view_dispatcher_get_event_loop,FuriEventLoop*,ViewDispatcher*
+Function,+,view_dispatcher_get_event_loop,FuriEventLoop*,ViewDispatcher*
 Function,+,view_dispatcher_remove_view,void,"ViewDispatcher*, uint32_t"
 Function,+,view_dispatcher_run,void,ViewDispatcher*
 Function,+,view_dispatcher_send_custom_event,void,"ViewDispatcher*, uint32_t"
@@ -3969,6 +4002,7 @@ Variable,+,I_Rpc_active_7x8,const Icon,
 Variable,+,I_SDQuestion_35x43,const Icon,
 Variable,+,I_SDcardFail_11x8,const Icon,
 Variable,+,I_SDcardMounted_11x8,const Icon,
+Variable,+,I_Sats_6x9,const Icon,
 Variable,+,I_Scanning_123x52,const Icon,
 Variable,+,I_SmallArrowDown_3x5,const Icon,
 Variable,+,I_SmallArrowUp_3x5,const Icon,
@@ -3993,7 +4027,9 @@ Variable,+,I_arrow_nano_down,const Icon,
 Variable,+,I_arrow_nano_up,const Icon,
 Variable,+,I_back_10px,const Icon,
 Variable,+,I_badkb_10px,const Icon,
-Variable,+,I_bright_text_30x30,const Icon,
+Variable,+,I_blue_19x20,const Icon,
+Variable,+,I_blue_hover_19x20,const Icon,
+Variable,+,I_brightness_text_40x5,const Icon,
 Variable,+,I_celsius_24x23,const Icon,
 Variable,+,I_celsius_hover_24x23,const Icon,
 Variable,+,I_ch_down_24x21,const Icon,
@@ -4002,12 +4038,16 @@ Variable,+,I_ch_text_31x34,const Icon,
 Variable,+,I_ch_up_24x21,const Icon,
 Variable,+,I_ch_up_hover_24x21,const Icon,
 Variable,+,I_check_big_20x17,const Icon,
+Variable,+,I_color_text_24x5,const Icon,
 Variable,+,I_cool_30x51,const Icon,
 Variable,+,I_dir_10px,const Icon,
 Variable,+,I_dolph_cry_49x54,const Icon,
 Variable,+,I_dry_19x20,const Icon,
 Variable,+,I_dry_hover_19x20,const Icon,
 Variable,+,I_dry_text_15x5,const Icon,
+Variable,+,I_eject_19x20,const Icon,
+Variable,+,I_eject_hover_19x20,const Icon,
+Variable,+,I_eject_text_19x5,const Icon,
 Variable,+,I_err_01,const Icon,
 Variable,+,I_err_02,const Icon,
 Variable,+,I_err_03,const Icon,
@@ -4021,11 +4061,16 @@ Variable,+,I_exit_hover_19x20,const Icon,
 Variable,+,I_exit_text_18x5,const Icon,
 Variable,+,I_fahren_24x23,const Icon,
 Variable,+,I_fahren_hover_24x23,const Icon,
+Variable,+,I_fast_backward_19x20,const Icon,
+Variable,+,I_fast_backward_hover_19x20,const Icon,
+Variable,+,I_fast_backward_text_19x6,const Icon,
+Variable,+,I_fast_f_19x20,const Icon,
+Variable,+,I_fast_f_hover_19x20,const Icon,
+Variable,+,I_fast_f_text_19x6,const Icon,
 Variable,+,I_file_10px,const Icon,
-Variable,+,I_flash_19x20,const Icon,
-Variable,+,I_flash_hover_19x20,const Icon,
-Variable,+,I_flash_text_21x5,const Icon,
 Variable,+,I_floppydisk_10px,const Icon,
+Variable,+,I_green_19x20,const Icon,
+Variable,+,I_green_hover_19x20,const Icon,
 Variable,+,I_heat_30x51,const Icon,
 Variable,+,I_hourglass0_24x24,const Icon,
 Variable,+,I_hourglass1_24x24,const Icon,
@@ -4049,6 +4094,8 @@ Variable,+,I_mag_card_10px,const Icon,
 Variable,+,I_max_24x23,const Icon,
 Variable,+,I_max_hover_24x23,const Icon,
 Variable,+,I_menu_text_20x5,const Icon,
+Variable,+,I_minus_19x20,const Icon,
+Variable,+,I_minus_hover_19x20,const Icon,
 Variable,+,I_mode_19x20,const Icon,
 Variable,+,I_mode_hover_19x20,const Icon,
 Variable,+,I_mode_text_20x5,const Icon,
@@ -4062,6 +4109,10 @@ Variable,+,I_next_text_19x6,const Icon,
 Variable,+,I_off_19x20,const Icon,
 Variable,+,I_off_hover_19x20,const Icon,
 Variable,+,I_off_text_12x5,const Icon,
+Variable,+,I_ok_19x20,const Icon,
+Variable,+,I_ok_hover_19x20,const Icon,
+Variable,+,I_ok_text_19x5,const Icon,
+Variable,+,I_on_text_9x5,const Icon,
 Variable,+,I_passport_128x64,const Icon,
 Variable,+,I_passport_bad_46x49,const Icon,
 Variable,+,I_passport_happy_46x49,const Icon,
@@ -4072,6 +4123,8 @@ Variable,+,I_pause_text_23x5,const Icon,
 Variable,+,I_play_19x20,const Icon,
 Variable,+,I_play_hover_19x20,const Icon,
 Variable,+,I_play_text_19x5,const Icon,
+Variable,+,I_plus_19x20,const Icon,
+Variable,+,I_plus_hover_19x20,const Icon,
 Variable,+,I_power_19x20,const Icon,
 Variable,+,I_power_hover_19x20,const Icon,
 Variable,+,I_power_text_24x5,const Icon,
@@ -4079,6 +4132,8 @@ Variable,+,I_prev_19x20,const Icon,
 Variable,+,I_prev_hover_19x20,const Icon,
 Variable,+,I_prev_text_19x5,const Icon,
 Variable,+,I_qr_benchmark_25x25,const Icon,
+Variable,+,I_red_19x20,const Icon,
+Variable,+,I_red_hover_19x20,const Icon,
 Variable,+,I_rotate_19x20,const Icon,
 Variable,+,I_rotate_hover_19x20,const Icon,
 Variable,+,I_rotate_text_24x5,const Icon,
@@ -4090,6 +4145,9 @@ Variable,+,I_stop_text_19x5,const Icon,
 Variable,+,I_sub1_10px,const Icon,
 Variable,+,I_subplaylist_10px,const Icon,
 Variable,+,I_subrem_10px,const Icon,
+Variable,+,I_subtitle_19x20,const Icon,
+Variable,+,I_subtitle_hover_19x20,const Icon,
+Variable,+,I_subtitle_text_19x5,const Icon,
 Variable,+,I_timer_19x20,const Icon,
 Variable,+,I_timer_hover_19x20,const Icon,
 Variable,+,I_timer_text_23x5,const Icon,
@@ -4102,6 +4160,8 @@ Variable,+,I_voldown_24x21,const Icon,
 Variable,+,I_voldown_hover_24x21,const Icon,
 Variable,+,I_volup_24x21,const Icon,
 Variable,+,I_volup_hover_24x21,const Icon,
+Variable,+,I_white_19x20,const Icon,
+Variable,+,I_white_hover_19x20,const Icon,
 Variable,-,MSIRangeTable,const uint32_t[16],
 Variable,-,SmpsPrescalerTable,const uint32_t[4][6],
 Variable,+,SystemCoreClock,uint32_t,

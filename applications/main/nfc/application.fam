@@ -30,6 +30,15 @@ App(
 )
 
 App(
+    appid="smartrider_parser",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="smartrider_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/smartrider.c"],
+)
+
+App(
     appid="microel_parser",
     apptype=FlipperAppType.PLUGIN,
     entry_point="microel_plugin_ep",
@@ -246,8 +255,29 @@ App(
 )
 
 App(
-    appid="ndef_parser",
+    appid="ndef_ul_parser",
     apptype=FlipperAppType.PLUGIN,
+    cdefines=[("NDEF_PROTO", "NDEF_PROTO_UL")],
+    entry_point="ndef_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/ndef.c"],
+)
+
+App(
+    appid="ndef_mfc_parser",
+    apptype=FlipperAppType.PLUGIN,
+    cdefines=[("NDEF_PROTO", "NDEF_PROTO_MFC")],
+    entry_point="ndef_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/ndef.c"],
+)
+
+App(
+    appid="ndef_slix_parser",
+    apptype=FlipperAppType.PLUGIN,
+    cdefines=[("NDEF_PROTO", "NDEF_PROTO_SLIX")],
     entry_point="ndef_plugin_ep",
     targets=["f7"],
     requires=["nfc"],
@@ -270,6 +300,24 @@ App(
     targets=["f7"],
     requires=["nfc"],
     sources=["plugins/supported_cards/skylanders.c"],
+)
+
+App(
+    appid="hworld_parser",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="hworld_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/hworld.c"],
+)
+
+App(
+    appid="trt_parser",
+    apptype=FlipperAppType.PLUGIN,
+    entry_point="trt_plugin_ep",
+    targets=["f7"],
+    requires=["nfc"],
+    sources=["plugins/supported_cards/trt.c"],
 )
 
 App(

@@ -569,6 +569,7 @@ static void nfc_protocol_support_scene_save_name_on_exit(NfcApp* instance) {
  */
 enum {
     NfcSceneEmulateStateWidget, /**< Widget view is displayed. */
+    NfcSceneEmulateStateWidgetLog, /**< Widget view with Log button is displayed */
     NfcSceneEmulateStateTextBox, /**< TextBox view is displayed. */
 };
 
@@ -647,12 +648,14 @@ static bool
                     "Log",
                     nfc_protocol_support_common_widget_callback,
                     instance);
+                scene_manager_set_scene_state(
+                    instance->scene_manager, NfcSceneEmulate, NfcSceneEmulateStateWidgetLog);
             }
             // Update TextBox data
             text_box_set_text(instance->text_box, furi_string_get_cstr(instance->text_box_store));
             consumed = true;
         } else if(event.event == GuiButtonTypeCenter) {
-            if(state == NfcSceneEmulateStateWidget) {
+            if(state == NfcSceneEmulateStateWidgetLog) {
                 view_dispatcher_switch_to_view(instance->view_dispatcher, NfcViewTextBox);
                 scene_manager_set_scene_state(
                     instance->scene_manager, NfcSceneEmulate, NfcSceneEmulateStateTextBox);
@@ -663,7 +666,7 @@ static bool
         if(state == NfcSceneEmulateStateTextBox) {
             view_dispatcher_switch_to_view(instance->view_dispatcher, NfcViewWidget);
             scene_manager_set_scene_state(
-                instance->scene_manager, NfcSceneEmulate, NfcSceneEmulateStateWidget);
+                instance->scene_manager, NfcSceneEmulate, NfcSceneEmulateStateWidgetLog);
             consumed = true;
         }
     }
@@ -731,6 +734,10 @@ static bool nfc_protocol_support_scene_rpc_on_event(NfcApp* instance, SceneManag
                 if(nfc_load_file(instance, instance->file_path, false)) {
                     nfc_protocol_support_scene_rpc_setup_ui_and_emulate(instance);
                     success = true;
+                } else {
+                    rpc_system_app_set_error_code(
+                        instance->rpc_ctx, RpcAppSystemErrorCodeParseFile);
+                    rpc_system_app_set_error_text(instance->rpc_ctx, "Cannot load key file");
                 }
             }
             rpc_system_app_confirm(instance->rpc_ctx, success);
