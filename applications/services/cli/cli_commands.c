@@ -62,18 +62,18 @@ void cli_command_neofetch(Cli* cli, FuriString* args, void* context) {
     UNUSED(context);
 
     static const char* const neofetch_logo[] = {
-        "            _.-------.._                    -,",
-        "        .-\"```\"--..,,_/ /`-,               -,  \\ ",
-        "     .:\"          /:/  /'\\  \\     ,_...,  `. |  |",
-        "    /       ,----/:/  /`\\ _\\~`_-\"`     _;",
-        "   '      / /`\"\"\"'\\ \\ \\.~`_-'      ,-\"'/ ",
-        "  |      | |  0    | | .-'      ,/`  /",
-        " |    ,..\\ \\     ,.-\"`       ,/`    /",
-        ";    :    `/`\"\"\\`           ,/--==,/-----,",
-        "|    `-...|        -.___-Z:_______J...---;",
-        ":         `                           _-'",
+        "__/\\\\\\\\____________/\\\\\\\\_________",
+        "__\\/\\\\\\\\\\\\________/\\\\\\\\\\\\________",
+        "___\\/\\\\\\//\\\\\\____/\\\\\\//\\\\\\_______",
+        "____\\/\\\\\\\\///\\\\\\/\\\\\\/_\\/\\\\\\______",
+        "_____\\/\\\\\\__\\///\\\\\\/___\\/\\\\\\_____",
+        "______\\/\\\\\\____\\///_____\\/\\\\\\____",
+        "_______\\/\\\\\\_____________\\/\\\\\\___",
+        "________\\/\\\\\\_____________\\/\\\\\\__",
+        "_________\\///______________///___",
+        "                                "
     };
-#define NEOFETCH_COLOR ANSI_FLIPPER_BRAND_ORANGE
+#define NEOFETCH_COLOR ANSI_FG_BLUE
 
     // Determine logo parameters
     size_t logo_height = COUNT_OF(neofetch_logo), logo_width = 0;
@@ -132,9 +132,9 @@ void cli_command_neofetch(Cli* cli, FuriString* args, void* context) {
         case 1: // delimiter
             printf(ANSI_RESET "%s", delimiter);
             break;
-        case 2: // OS: FURI <edition> <branch> <version> <commit> (SDK <maj>.<min>)
+        case 2: // FW: FURI <edition> <branch> <version> <commit> (SDK <maj>.<min>)
             printf(
-                "OS" ANSI_RESET ": FURI %s %s %s %s (SDK %hu.%hu)",
+                "FW" ANSI_RESET ": FURI %s %s %s %s (SDK %hu.%hu)",
                 version_get_version(version),
                 version_get_gitbranch(version),
                 version_get_version(version),
