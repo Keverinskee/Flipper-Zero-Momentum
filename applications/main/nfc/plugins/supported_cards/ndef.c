@@ -24,13 +24,17 @@
 #define TAG "NDEF"
 
 #define NDEF_PROTO_INVALID (-1)
-#define NDEF_PROTO_UL      (0)
-#define NDEF_PROTO_MFC     (1)
-#define NDEF_PROTO_SLIX    (2)
-#define NDEF_PROTO_TOTAL   (3)
+#define NDEF_PROTO_RAW     (0) // For parsing data fed manually
+#define NDEF_PROTO_UL      (1)
+#define NDEF_PROTO_MFC     (2)
+#define NDEF_PROTO_SLIX    (3)
+#define NDEF_PROTO_TOTAL   (4)
 
-#if !defined(NDEF_PROTO) || NDEF_PROTO <= NDEF_PROTO_INVALID || NDEF_PROTO >= NDEF_PROTO_TOTAL
+#ifndef NDEF_PROTO
 #error Must specify what protocol to use with NDEF_PROTO define!
+#endif
+#if NDEF_PROTO <= NDEF_PROTO_INVALID || NDEF_PROTO >= NDEF_PROTO_TOTAL
+#error Invalid NDEF_PROTO specified!
 #endif
 
 #define NDEF_TITLE(device, parsed_data)         \
@@ -126,7 +130,12 @@ static const char* ndef_uri_prepends[] = {
 // Shared context and state, read above
 typedef struct {
     FuriString* output;
-#if NDEF_PROTO == NDEF_PROTO_UL
+#if NDEF_PROTO == NDEF_PROTO_RAW
+    struct {
+        const uint8_t* data;
+        size_t size;
+    } raw;
+#elif NDEF_PROTO == NDEF_PROTO_UL
     struct {
         const uint8_t* start;
         size_t size;
@@ -145,7 +154,14 @@ typedef struct {
 } Ndef;
 
 static bool ndef_get(Ndef* ndef, size_t pos, size_t len, void* buf) {
-#if NDEF_PROTO == NDEF_PROTO_UL
+#if NDEF_PROTO == NDEF_PROTO_RAW
+
+    // Using user-provided pointer, simply need to remap to it
+    if(pos + len > ndef->raw.size) return false;
+    memcpy(buf, ndef->raw.data + pos, len);
+    return true;
+
+#elif NDEF_PROTO == NDEF_PROTO_UL
 
     // Memory space is contiguous, simply need to remap to data pointer
     if(pos + len > ndef->ul.size) return false;
@@ -515,10 +531,9 @@ static bool ndef_parse_wifi(Ndef* ndef, size_t pos, size_t len) {
 
 // ---=== ndef layout parsing ===---
 
-static bool
-    ndef_parse_message(Ndef* ndef, size_t pos, size_t len, size_t message_num, bool smart_poster);
-static size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_parsed);
-static bool ndef_parse_record(
+bool ndef_parse_message(Ndef* ndef, size_t pos, size_t len, size_t message_num, bool smart_poster);
+size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_parsed);
+bool ndef_parse_record(
     Ndef* ndef,
     size_t pos,
     size_t len,
@@ -526,7 +541,7 @@ static bool ndef_parse_record(
     const char* type,
     uint8_t type_len);
 
-static bool ndef_parse_record(
+bool ndef_parse_record(
     Ndef* ndef,
     size_t pos,
     size_t len,
@@ -587,8 +602,7 @@ static bool ndef_parse_record(
 
 // NDEF message structure:
 // https://docs.nordicsemi.com/bundle/ncs-latest/page/nrf/protocols/nfc/index.html#ndef_message_and_record_format
-static bool
-    ndef_parse_message(Ndef* ndef, size_t pos, size_t len, size_t message_num, bool smart_poster) {
+bool ndef_parse_message(Ndef* ndef, size_t pos, size_t len, size_t message_num, bool smart_poster) {
     size_t end = pos + len;
 
     size_t record_num = 0;
@@ -682,7 +696,7 @@ static bool
 
 // TLV structure:
 // https://docs.nordicsemi.com/bundle/ncs-latest/page/nrfxlib/nfc/doc/type_2_tag.html#data
-static size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_parsed) {
+size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_parsed) {
     size_t end = pos + len;
     size_t message_num = 0;
 
@@ -739,6 +753,8 @@ static size_t ndef_parse_tlv(Ndef* ndef, size_t pos, size_t len, size_t already_
     // but also no errors, treat this as a success
     return message_num;
 }
+
+#if NDEF_PROTO != NDEF_PROTO_RAW
 
 // ---=== protocol entry-points ===---
 
@@ -1011,3 +1027,5 @@ static const FlipperAppPluginDescriptor ndef_plugin_descriptor = {
 const FlipperAppPluginDescriptor* ndef_plugin_ep(void) {
     return &ndef_plugin_descriptor;
 }
+
+#endif
