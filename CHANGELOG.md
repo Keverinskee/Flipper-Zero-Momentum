@@ -117,6 +117,7 @@
 - NFC:
   - NDEF Parser:
     - Mifare Classic support (#265 by @luu176), protocol-agnostic rewrite and more improvements (#265 by @Willy-JL)
+    - SLIX support, parse even with TLV terminator omitted, parse empty NDEF TLVs (#278 by @Willy-JL)
     - Decoding of URL-encoded URI characters (#267 by @jaylikesbunda)
     - SmartPoster record support (#275 by @Willy-JL)
     - Enable parsing NTAG I2C Plus 1k and 2k chips too (#237 by @RocketGod-git)
