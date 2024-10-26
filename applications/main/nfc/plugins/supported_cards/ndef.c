@@ -1,16 +1,18 @@
 // Parser for NDEF format data
 // Supports multiple NDEF messages and records in same tag
-// Parsed types: URI (+ Phone, Mail), Text, BT MAC, Contact, WiFi, Empty
+// Parsed types: URI (+ Phone, Mail), Text, BT MAC, Contact, WiFi, Empty, SmartPoster
 // Documentation and sources indicated where relevant
 // Made by @Willy-JL
-// Mifare Classic support added by @luu176
+// Mifare Ultralight support by @Willy-JL
+// Mifare Classic support by @luu176 & @Willy-JL
+// SLIX support by @Willy-JL
 
 // We use an arbitrary position system here, in order to support more protocols.
 // Each protocol parses basic structure of the card, then starts ndef_parse_tlv()
 // using an arbitrary position value that it can understand. When accessing data
 // to parse NDEF content, ndef_get() will then map this arbitrary value to the
-// card using state in Ndef struct, skip blocks or sectors as needed. This way,
-// NDEF parsing code does not need to know details of card layout.
+// card using state in Ndef struct, skipping blocks or sectors as needed. This
+// way, NDEF parsing code does not need to know details of card layout.
 
 #include "nfc_supported_card_plugin.h"
 #include <flipper_application.h>
@@ -85,8 +87,7 @@ _Static_assert(sizeof(NdefFlagsTnf) == 1);
 // URI payload format:
 // https://learn.adafruit.com/adafruit-pn532-rfid-nfc/ndef#uri-records-0x55-slash-u-607763
 static const char* ndef_uri_prepends[] = {
-    // clang-format off
-    [0x00] = NULL,
+    [0x00] = NULL, // Allows detecting no prepend and checking schema for type
     [0x01] = "http://www.",
     [0x02] = "https://www.",
     [0x03] = "http://",
@@ -122,7 +123,6 @@ static const char* ndef_uri_prepends[] = {
     [0x21] = "urn:epc:raw:",
     [0x22] = "urn:epc:",
     [0x23] = "urn:nfc:",
-    // clang-format on
 };
 
 // ---=== card memory layout abstraction ===---
