@@ -123,7 +123,7 @@ void cli_motd(void) {
            "Welcome to Flipper Zero Command Line Interface!\r\n"
            "Read the manual: https://docs.flipper.net/development/cli\r\n"
            "Run `help` or `?` to list available commands\r\n"
-           "This is running \033[1;31m@GameLord2011\033[0m's fork of momentum fw\r\n"
+           "Ascii art by: \033[1;31m@GameLord2011\033[0m\r\n"
            "\r\n");
 
     const Version* firmware_version = furi_hal_version_get_firmware_version();
