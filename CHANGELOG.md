@@ -82,6 +82,7 @@
 - JS:
   - New `i2c` module (#259 by @jamisonderek)
   - New `spi` module (#272 by @jamisonderek)
+- RPC: Added ASCII event support (#284 by @Willy-JL)
 - BadKB:
   - OFW: Add linux/gnome badusb demo files (by @thomasnemer)
   - Add older qFlipper install demos for windows and macos (by @DXVVAY & @grugnoymeme)
