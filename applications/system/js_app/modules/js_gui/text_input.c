@@ -135,7 +135,7 @@ static JsKbdContext* ctx_make(struct mjs* mjs, TextInput* input, mjs_val_t view_
                 .transformer_context = context,
             },
     };
-    text_input_add_illegal_symbols(input);
+    text_input_show_illegal_symbols(input, true); // Temporary until prop is available
     text_input_set_result_callback(
         input,
         (TextInputCallback)input_callback,
