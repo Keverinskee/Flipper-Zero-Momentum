@@ -78,7 +78,7 @@ void flipper_migrate_files() {
         {EXT_PATH(".config/dolphin.state"), DOLPHIN_STATE_PATH},
         {EXT_PATH(".config/expansion.settings"), EXPANSION_SETTINGS_PATH},
         {EXT_PATH(".config/mainmenu_apps.txt"), MAINMENU_APPS_PATH},
-        {EXT_PATH(".config/xtreme_menu.txt"), MAINMENU_APPS_PATH},
+        {EXT_PATH(".config/momentum_menu.txt"), MAINMENU_APPS_PATH},
         {EXT_PATH(".config/momentum_settings.txt"), MOMENTUM_SETTINGS_PATH},
         {EXT_PATH(".config/xtreme_settings.txt"), MOMENTUM_SETTINGS_PATH},
         {EXT_PATH(".config/notification.settings"), NOTIFICATION_SETTINGS_PATH},
