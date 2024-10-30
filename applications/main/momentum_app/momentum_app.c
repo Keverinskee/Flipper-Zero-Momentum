@@ -194,7 +194,7 @@ void momentum_app_load_mainmenu_apps(MomentumApp* app) {
                     furi_string_set(line, "125 kHz RFID");
                 } else if(furi_string_equal(line, "SubGHz")) {
                     furi_string_set(line, "Sub-GHz");
-                } else if(furi_string_equal(line, "Xtreme")) {
+                } else if(furi_string_equal(line, "MNTM")) {
                     furi_string_set(line, "Momentum");
                 }
             }
