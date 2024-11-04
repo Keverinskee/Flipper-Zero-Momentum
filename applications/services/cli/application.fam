@@ -10,7 +10,7 @@ App(
 )
 
 App(
-    appid="cli_info",
+    appid="info_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_info_plugin_ep",
@@ -19,7 +19,7 @@ App(
 )
 
 App(
-    appid="cli_src",
+    appid="src_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_src_plugin_ep",
@@ -28,7 +28,7 @@ App(
 )
 
 App(
-    appid="cli_neofetch",
+    appid="neofetch_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_neofetch_plugin_ep",
@@ -37,7 +37,7 @@ App(
 )
 
 App(
-    appid="cli_help",
+    appid="help_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_help_plugin_ep",
@@ -46,7 +46,7 @@ App(
 )
 
 App(
-    appid="cli_uptime",
+    appid="uptime_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_uptime_plugin_ep",
@@ -55,7 +55,7 @@ App(
 )
 
 App(
-    appid="cli_date",
+    appid="date_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_date_plugin_ep",
@@ -64,7 +64,7 @@ App(
 )
 
 App(
-    appid="cli_sysctl",
+    appid="sysctl_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_sysctl_plugin_ep",
@@ -73,7 +73,7 @@ App(
 )
 
 App(
-    appid="cli_vibro",
+    appid="vibro_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_vibro_plugin_ep",
@@ -82,7 +82,7 @@ App(
 )
 
 App(
-    appid="cli_led",
+    appid="led_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_led_plugin_ep",
@@ -91,7 +91,7 @@ App(
 )
 
 App(
-    appid="cli_gpio",
+    appid="gpio_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_gpio_plugin_ep",
@@ -100,7 +100,7 @@ App(
 )
 
 App(
-    appid="cli_i2c",
+    appid="i2c_cli",
     targets=["f7"],
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_i2c_plugin_ep",
