@@ -126,7 +126,9 @@
   - UL: W5500 Ethernet: Various fixes and improvements (by @xMasterX)
   - OFW: SPI Mem Manager: Fixed UI rendering bug related to line breaks (by @portasynthinca3)
   - OFW: USB/BT Remote: Mouse clicker option to click as fast as possible (by @sumukhj1219)
-- CLI: Print plugin name on load fail (by @Willy-JL)
+- CLI:
+  - Print plugin name on load fail (by @Willy-JL)
+  - Move more commands as plugins on SD, refactor plugin wrapper (#276 by @Willy-JL)
 - NFC:
   - NDEF Parser:
     - Mifare Classic support (#265 by @luu176), protocol-agnostic rewrite and more improvements (#265 by @Willy-JL)
