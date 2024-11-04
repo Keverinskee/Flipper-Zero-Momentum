@@ -23,6 +23,7 @@ App(
     apptype=FlipperAppType.PLUGIN,
     entry_point="power_cli_plugin_ep",
     requires=["cli"],
+    sources=["power_cli.c"],
 )
 
 App(

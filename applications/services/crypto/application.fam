@@ -4,6 +4,7 @@ App(
     apptype=FlipperAppType.PLUGIN,
     entry_point="crypto_cli_plugin_ep",
     requires=["cli"],
+    sources=["crypto_cli.c"],
 )
 
 App(
