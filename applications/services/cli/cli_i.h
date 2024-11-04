@@ -68,6 +68,19 @@ void cli_stdout_callback(void* _cookie, const char* data, size_t size);
 #define CLI_PLUGIN_APP_ID      "cli"
 #define CLI_PLUGIN_API_VERSION 1
 void cli_plugin_wrapper(const char* name, Cli* cli, FuriString* args, void* context);
+#include <flipper_application/flipper_application.h>
+#define CLI_PLUGIN_WRAPPER(plugin_name_without_cli_suffix, cli_command_callback)            \
+    static void cli_command_callback##_wrapper(Cli* cli, FuriString* args, void* context) { \
+        cli_plugin_wrapper(plugin_name_without_cli_suffix, cli, args, context);             \
+    }                                                                                       \
+    static const FlipperAppPluginDescriptor cli_command_callback##_plugin_descriptor = {    \
+        .appid = CLI_PLUGIN_APP_ID,                                                         \
+        .ep_api_version = CLI_PLUGIN_API_VERSION,                                           \
+        .entry_point = &cli_command_callback,                                               \
+    };                                                                                      \
+    const FlipperAppPluginDescriptor* cli_command_callback##_plugin_ep(void) {              \
+        return &cli_command_callback##_plugin_descriptor;                                   \
+    }
 
 #ifdef __cplusplus
 }

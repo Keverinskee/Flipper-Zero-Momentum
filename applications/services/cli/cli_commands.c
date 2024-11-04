@@ -682,161 +682,17 @@ void cli_command_i2c(Cli* cli, FuriString* args, void* context) {
     furi_hal_i2c_release(&furi_hal_i2c_handle_external);
 }
 
-#include <flipper_application/flipper_application.h>
-
-static void cli_command_info_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_info", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_info_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_info,
-};
-
-const FlipperAppPluginDescriptor* cli_command_info_plugin_ep(void) {
-    return &cli_command_info_plugin_descriptor;
-}
-
-static void cli_command_src_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_src", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_src_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_src,
-};
-
-const FlipperAppPluginDescriptor* cli_command_src_plugin_ep(void) {
-    return &cli_command_src_plugin_descriptor;
-}
-
-static void cli_command_neofetch_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_neofetch", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_neofetch_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_neofetch,
-};
-
-const FlipperAppPluginDescriptor* cli_command_neofetch_plugin_ep(void) {
-    return &cli_command_neofetch_plugin_descriptor;
-}
-
-static void cli_command_help_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_help", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_help_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_help,
-};
-
-const FlipperAppPluginDescriptor* cli_command_help_plugin_ep(void) {
-    return &cli_command_help_plugin_descriptor;
-}
-
-static void cli_command_uptime_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_uptime", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_uptime_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_uptime,
-};
-
-const FlipperAppPluginDescriptor* cli_command_uptime_plugin_ep(void) {
-    return &cli_command_uptime_plugin_descriptor;
-}
-
-static void cli_command_date_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_date", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_date_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_date,
-};
-
-const FlipperAppPluginDescriptor* cli_command_date_plugin_ep(void) {
-    return &cli_command_date_plugin_descriptor;
-}
-
-static void cli_command_sysctl_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_sysctl", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_sysctl_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_sysctl,
-};
-
-const FlipperAppPluginDescriptor* cli_command_sysctl_plugin_ep(void) {
-    return &cli_command_sysctl_plugin_descriptor;
-}
-
-static void cli_command_vibro_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_vibro", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_vibro_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_vibro,
-};
-
-const FlipperAppPluginDescriptor* cli_command_vibro_plugin_ep(void) {
-    return &cli_command_vibro_plugin_descriptor;
-}
-
-static void cli_command_led_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_led", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_led_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_led,
-};
-
-const FlipperAppPluginDescriptor* cli_command_led_plugin_ep(void) {
-    return &cli_command_led_plugin_descriptor;
-}
-
-static void cli_command_gpio_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_gpio", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_gpio_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_gpio,
-};
-
-const FlipperAppPluginDescriptor* cli_command_gpio_plugin_ep(void) {
-    return &cli_command_gpio_plugin_descriptor;
-}
-
-static void cli_command_i2c_wrapper(Cli* cli, FuriString* args, void* context) {
-    cli_plugin_wrapper("cli_i2c", cli, args, context);
-}
-
-static const FlipperAppPluginDescriptor cli_command_i2c_plugin_descriptor = {
-    .appid = CLI_PLUGIN_APP_ID,
-    .ep_api_version = CLI_PLUGIN_API_VERSION,
-    .entry_point = &cli_command_i2c,
-};
-
-const FlipperAppPluginDescriptor* cli_command_i2c_plugin_ep(void) {
-    return &cli_command_i2c_plugin_descriptor;
-}
+CLI_PLUGIN_WRAPPER("info", cli_command_info)
+CLI_PLUGIN_WRAPPER("src", cli_command_src)
+CLI_PLUGIN_WRAPPER("neofetch", cli_command_neofetch)
+CLI_PLUGIN_WRAPPER("help", cli_command_help)
+CLI_PLUGIN_WRAPPER("uptime", cli_command_uptime)
+CLI_PLUGIN_WRAPPER("date", cli_command_date)
+CLI_PLUGIN_WRAPPER("sysctl", cli_command_sysctl)
+CLI_PLUGIN_WRAPPER("vibro", cli_command_vibro)
+CLI_PLUGIN_WRAPPER("led", cli_command_led)
+CLI_PLUGIN_WRAPPER("gpio", cli_command_gpio)
+CLI_PLUGIN_WRAPPER("i2c", cli_command_i2c)
 
 void cli_commands_init(Cli* cli) {
     cli_add_command(cli, "!", CliCommandFlagParallelSafe, cli_command_info_wrapper, (void*)true);
