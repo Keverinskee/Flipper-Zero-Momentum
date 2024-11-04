@@ -80,10 +80,17 @@
   - Option to "Load from Library File" for Universal Remotes (#255 by @zxkmm)
 - Updater: New Yappy themed icon while updating (#253 by @the1anonlypr3 & @Kuronons & @nescap)
 - JS:
-  - New `i2c` module (#259 by @jamisonderek)
-  - New `spi` module (#272 by @jamisonderek)
+  - OFW: JS: Modules backport & overhaul (by @portasynthinca3)
+    - See above for list of breaking changes, here are listed strictly new functionalities
+    - New `event_loop` module for event-driven interactivity
+    - Interrupt and callback support for `gpio` module
+    - New `gui` module that allows much more developed interfaces, also new `gui/loading` and `gui/empty_screen` views
+    - Directory operations and many more file operations for `storage` module
   - OFW: Full-fledged JS SDK + npm packages (by @portasynthinca3)
     - CFWs can have their own JS SDKs too! Check ours out at [`@next-flip/fz-sdk-mntm`](https://www.npmjs.com/package/@next-flip/fz-sdk-mntm)
+  - New `i2c` module (#259 by @jamisonderek)
+  - New `spi` module (#272 by @jamisonderek)
+  - Added `illegalSymbols` prop for `gui/text_input` view (#290 by @Willy-JL)
   - Added typedocs for all extra JS modules in Momentum (by @Willy-JL)
 - RPC: Added ASCII event support (#284 by @Willy-JL)
 - OFW: Settings: Clock editing & Alarm function (目覚め時計) (by @skotopes)
