@@ -278,6 +278,7 @@ static const char* extra_features[] = {
     "widget",
 
     // extra features
+    "gui-textinput-illegalsymbols",
     "storage-virtual",
     "usbdisk-createimage",
     "widget-addicon",

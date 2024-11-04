@@ -22,6 +22,7 @@
  *   - `maxLength`: Maximum allowed text length
  *   - `defaultText`: Text to show by default
  *   - `defaultTextClear`: Whether to clear the default text on next character typed
+ *   - `illegalSymbols`: Whether to show illegal filename symbols, available with JS feature `gui-textinput-illegalsymbols`
  * 
  * @version Added in JS SDK 0.1
  * @module
@@ -36,6 +37,7 @@ type Props = {
     maxLength: number,
     defaultText: string,
     defaultTextClear: boolean,
+    illegalSymbols: boolean,
 }
 declare class TextInput extends View<Props> {
     input: Contract<string>;
