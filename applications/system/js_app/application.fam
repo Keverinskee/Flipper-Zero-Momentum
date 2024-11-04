@@ -2,19 +2,23 @@ App(
     appid="js_app",
     name="JS Runner",
     apptype=FlipperAppType.EXTERNAL,
-    entry_point="js_app",
     cdefines=["JS_RUNNER_FAP"],
-    # Sources separation breaks linking when internal, comment as needed
-    sources=[
-        "*.c*",
-        "!modules",
-        "modules/js_flipper.c",
-    ],
+    fap_icon="icon.png",
+    fap_category="assets",
+    entry_point="js_app",
     stack_size=2 * 1024,
     resources="examples",
     order=0,
-    fap_icon="icon.png",
-    fap_category="assets",
+    provides=["js_app_start"],
+    sources=[
+        "js_app.c",
+        "js_modules.c",
+        "js_thread.c",
+        "plugin_api/app_api_table.cpp",
+        "views/console_view.c",
+        "modules/js_flipper.c",
+        "modules/js_tests.c",
+    ],
 )
 
 App(
@@ -24,9 +28,12 @@ App(
     entry_point="js_cli_plugin_ep",
     requires=["cli"],
     sources=[
-        "*.c*",
-        "!modules",
+        "js_app.c",
+        "js_modules.c",
+        "js_thread.c",
+        "plugin_api/app_api_table.cpp",
         "modules/js_flipper.c",
+        "modules/js_tests.c",
     ],
 )
 
@@ -119,6 +126,7 @@ App(
     entry_point="js_gui_file_picker_ep",
     requires=["js_app"],
     sources=["modules/js_gui/file_picker.c"],
+    fap_libs=[],
 )
 
 App(
