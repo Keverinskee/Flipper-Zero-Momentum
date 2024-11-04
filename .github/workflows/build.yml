@@ -129,7 +129,7 @@ jobs:
           dfu_size_dev=$(du -B 1 dev.dfu | cut -f1)
           dfu_size_diff=$((dfu_size_new - dfu_size_dev))
           DFU_SIZE=$(echo ${dfu_size_new}B | sed -r 's/^([0-9]+)([0-9]{2})([0-9])B/\1.\2K/')
-          DFU_DIFF=$(echo ${dfu_size_diff}B | sed -r 's/^([0-9]+)([0-9]{2})([0-9])B/\1.\2K/' | sed -r 's/^([^-])/+\1/')
+          DFU_DIFF=$(echo ${dfu_size_diff}B | sed -r 's/^(-?[0-9]+)([0-9]{2})([0-9])B/\1.\2K/' | sed -r 's/^([^-])/+\1/')
           echo "DFU_SIZE=$DFU_SIZE" >> $GITHUB_ENV
           echo "DFU_DIFF=$DFU_DIFF" >> $GITHUB_ENV
 
