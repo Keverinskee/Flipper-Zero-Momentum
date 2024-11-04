@@ -154,8 +154,7 @@ class Main(App):
             if "frame_rate" in filenames:
                 self.logger.debug("Folder contains animation")
                 icon_name = "A_" + os.path.split(dirpath)[1].replace("-", "_")
-                icon_in_api = api_has_icon(icon_name)
-                if not is_main_assets and icon_in_api:
+                if not is_main_assets and api_has_icon(icon_name):
                     self.logger.info(
                         f"{self.args.filename}: ignoring duplicate icon {icon_name}"
                     )
@@ -195,8 +194,7 @@ class Main(App):
                 icons_c.write("\n")
                 icons.append((icon_name, width, height, frame_rate, frame_count))
                 p = dirpath.removeprefix(self.args.input_directory)[1:]
-                if icon_in_api:
-                    paths.append((icon_name, p.replace("\\", "/")))
+                paths.append((icon_name, p.replace("\\", "/")))
             else:
                 # process icons
                 for filename in filenames:
@@ -206,8 +204,7 @@ class Main(App):
                     icon_name = "I_" + "_".join(filename.split(".")[:-1]).replace(
                         "-", "_"
                     )
-                    icon_in_api = api_has_icon(icon_name)
-                    if not is_main_assets and icon_in_api:
+                    if not is_main_assets and api_has_icon(icon_name):
                         self.logger.info(
                             f"{self.args.filename}: ignoring duplicate icon {icon_name}"
                         )
@@ -226,10 +223,7 @@ class Main(App):
                     icons_c.write("\n")
                     icons.append((icon_name, width, height, 0, 1))
                     p = fullfilename.removeprefix(self.args.input_directory)[1:]
-                    if icon_in_api:
-                        paths.append(
-                            (icon_name, p.replace("\\", "/").rsplit(".", 1)[0])
-                        )
+                    paths.append((icon_name, p.replace("\\", "/").rsplit(".", 1)[0]))
         # Create array of images:
         self.logger.debug("Finalizing source file")
         for name, width, height, frame_rate, frame_count in icons:
