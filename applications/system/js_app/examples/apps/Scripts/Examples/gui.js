@@ -48,7 +48,7 @@ let views = {
 // Enable illegal filename symbols since we're not choosing filenames, gives more flexibility
 // Not available in all firmwares, good idea to check if it is supported
 if (doesSdkSupport(["gui-textinput-illegalsymbols"])) {
-    views.textInput.set("illegalSymbols", true);
+    views.keyboard.set("illegalSymbols", true);
 }
 
 // demo selector
