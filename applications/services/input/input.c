@@ -25,7 +25,7 @@ typedef struct {
 } InputPinState;
 
 /** Input CLI command handler */
-void input_cli(Cli* cli, FuriString* args, void* context);
+void input_cli_wrapper(Cli* cli, FuriString* args, void* context);
 
 // #define INPUT_DEBUG
 
@@ -78,9 +78,6 @@ const char* input_get_type_name(InputType type) {
         return "Unknown";
     }
 }
-
-#include <cli/cli_i.h>
-CLI_PLUGIN_WRAPPER("input", input_cli)
 
 int32_t input_srv(void* p) {
     UNUSED(p);

@@ -225,3 +225,6 @@ void input_cli(Cli* cli, FuriString* args, void* context) {
 
     furi_string_free(cmd);
 }
+
+#include <cli/cli_i.h>
+CLI_PLUGIN_WRAPPER("input", input_cli)
