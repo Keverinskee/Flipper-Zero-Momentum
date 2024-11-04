@@ -1203,5 +1203,6 @@ void subghz_on_system_start(void) {
     furi_record_close(RECORD_CLI);
 #else
     UNUSED(subghz_cli_command);
+    UNUSED(subghz_cli_command_chat_wrapper);
 #endif
 }
