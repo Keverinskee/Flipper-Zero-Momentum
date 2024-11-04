@@ -96,7 +96,7 @@ App(
     apptype=FlipperAppType.PLUGIN,
     entry_point="cli_command_gpio_plugin_ep",
     requires=["cli"],
-    sources=["cli_commands.c"],
+    sources=["cli_commands.c", "cli_command_gpio.c"],
 )
 
 App(
