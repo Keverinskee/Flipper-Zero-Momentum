@@ -119,6 +119,20 @@ jobs:
           tar czpf "artifacts/flipper-z-any-scripts-${SUFFIX}.tgz" scripts
           cp build/core2_firmware.tgz "artifacts/flipper-z-any-core2_firmware-${SUFFIX}.tgz"
 
+      - name: "Calculate DFU sizes"
+        env:
+          INDEXER_URL: ${{ secrets.INDEXER_URL }}
+        if: ${{ env.INDEXER_URL != '' && github.event.pull_request && matrix.target == env.DEFAULT_TARGET }}
+        run: |
+          curl -L "${{ secrets.INDEXER_URL }}"/firmware/development/f7/full_dfu -o dev.dfu
+          dfu_size_new=$(du --apparent-size -B 1 artifacts/flipper-z-${TARGET}-full-*.dfu | cut -f1)
+          dfu_size_dev=$(du --apparent-size -B 1 dev.dfu | cut -f1)
+          dfu_size_diff=$((dfu_size_new - dfu_size_dev))
+          DFU_SIZE=$(echo ${dfu_size_new}B | sed -r 's/^([0-9]+)([0-9]{2})([0-9])B/\1.\2K/')
+          DFU_DIFF=$(echo ${dfu_size_diff}B | sed -r 's/^(-?[0-9]+)([0-9]{2})([0-9])B/\1.\2K/' | sed -r 's/^([^-])/+\1/')
+          echo "DFU_SIZE=$DFU_SIZE" >> $GITHUB_ENV
+          echo "DFU_DIFF=$DFU_DIFF" >> $GITHUB_ENV
+
       - name: "Upload artifacts to update server"
         env:
           INDEXER_URL: ${{ secrets.INDEXER_URL }}
@@ -155,6 +169,7 @@ jobs:
             **Compiled ${{ matrix.target }} firmware for commit `${{steps.names.outputs.commit_sha}}`:**
             - [☁️ Flipper Lab/App](https://lab.flipper.net/?url=${{secrets.INDEXER_URL}}/builds/firmware/${{steps.names.outputs.branch_name}}/flipper-z-${{steps.names.outputs.default_target}}-update-${{steps.names.outputs.suffix}}.tgz&channel=mntm-${{steps.names.outputs.branch_name}}&version=${{steps.names.outputs.commit_sha}})
             - [📦 qFlipper Package](${{secrets.INDEXER_URL}}/builds/firmware/${{steps.names.outputs.branch_name}}/flipper-z-${{steps.names.outputs.default_target}}-update-${{steps.names.outputs.suffix}}.tgz)
+            - DFU Size: `${{ env.DFU_SIZE }}` (`${{ env.DFU_DIFF }}` from dev)
           edit-mode: replace
 
       - name: Send devbuild webhook
