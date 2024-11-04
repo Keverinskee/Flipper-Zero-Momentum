@@ -79,6 +79,7 @@ void cli_plugin_wrapper(const char* name, Cli* cli, FuriString* args, void* cont
         .entry_point = &cli_command_callback,                                               \
     };                                                                                      \
     const FlipperAppPluginDescriptor* cli_command_callback##_plugin_ep(void) {              \
+        UNUSED(cli_command_callback##_wrapper);                                             \
         return &cli_command_callback##_plugin_descriptor;                                   \
     }
 
