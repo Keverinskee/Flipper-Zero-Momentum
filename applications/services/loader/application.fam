@@ -20,7 +20,6 @@ App(
     apptype=FlipperAppType.PLUGIN,
     entry_point="loader_cli_plugin_ep",
     requires=["cli"],
-    sources=["loader_cli.c"],
 )
 
 App(
