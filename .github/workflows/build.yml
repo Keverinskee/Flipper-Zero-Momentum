@@ -134,7 +134,7 @@ jobs:
           echo "DFU_DIFF=$DFU_DIFF" >> $GITHUB_ENV
 
           tar xzf build/core2_firmware.tgz
-          radio_addr=$(jq -r '.copro.radio.files.[0].address' core2_firmware/Manifest.json)
+          radio_addr=$(jq -r '.copro.radio.files[0].address' core2_firmware/Manifest.json)
           flash_base=0x8000000
           min_gap=$((2 * 4 * 1024))
           flash_free_total=$((radio_addr - flash_base - dfu_size_new))
