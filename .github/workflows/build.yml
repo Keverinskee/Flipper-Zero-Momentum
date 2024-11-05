@@ -138,7 +138,7 @@ jobs:
           flash_base=0x8000000
           min_gap=$((2 * 4 * 1024))
           flash_free_total=$((radio_addr - flash_base - dfu_size_new))
-          flash_free_usable$((flash_free_total - min_gap))
+          flash_free_usable=$((flash_free_total - min_gap))
           FLASH_FREE=$(echo $flash_free_total | numfmt --to=iec --format=%.2f)
           FLASH_USABLE=$(echo $flash_free_usable | numfmt --to=iec --format=%.2f)
           echo "FLASH_FREE=$FLASH_FREE" >> $GITHUB_ENV
