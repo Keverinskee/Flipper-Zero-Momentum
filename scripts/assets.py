@@ -63,6 +63,22 @@ class Main(App):
             required=False,
             default="assets_icons",
         )
+        self.parser_icons.add_argument(
+            "--fw-bundle",
+            dest="fw_bundle",
+            help="Bundle all icons and path info, only for use in firmware blob",
+            default=0,
+            type=int,
+            required=False,
+        )
+        self.parser_icons.add_argument(
+            "--add-include",
+            dest="add_include",
+            help="Add assets_icons.h include drop-in for apps",
+            default=0,
+            type=int,
+            required=False,
+        )
 
         self.parser_icons.set_defaults(func=self.icons)
 
@@ -156,7 +172,6 @@ class Main(App):
         )
         icons = []
         paths = []
-        is_main_assets = self.args.filename == "assets_icons"
         symbols = pathlib.Path(__file__).parent.parent
         if "UFBT_HOME" in os.environ:
             symbols /= "sdk_headers/f7_sdk"
@@ -173,7 +188,7 @@ class Main(App):
                 self.logger.debug("Folder contains animation")
                 icon_name = "A_" + os.path.split(dirpath)[1].replace("-", "_")
                 icon_in_api = api_has_icon(icon_name)
-                if not is_main_assets and icon_in_api:
+                if not self.args.fw_bundle and icon_in_api:
                     self.logger.info(
                         f"{self.args.filename}: ignoring duplicate icon {icon_name}"
                     )
@@ -212,7 +227,7 @@ class Main(App):
                 )
                 icons_c.write("\n")
                 icons.append((icon_name, width, height, frame_rate, frame_count))
-                if is_main_assets and icon_in_api:
+                if self.args.fw_bundle and icon_in_api:
                     path = dirpath.removeprefix(self.args.input_directory)[1:]
                     paths.append((icon_name, path.replace("\\", "/")))
             else:
@@ -225,7 +240,7 @@ class Main(App):
                         "-", "_"
                     )
                     icon_in_api = api_has_icon(icon_name)
-                    if not is_main_assets and icon_in_api:
+                    if not self.args.fw_bundle and icon_in_api:
                         self.logger.info(
                             f"{self.args.filename}: ignoring duplicate icon {icon_name}"
                         )
@@ -243,7 +258,7 @@ class Main(App):
                     )
                     icons_c.write("\n")
                     icons.append((icon_name, width, height, 0, 1))
-                    if is_main_assets and icon_in_api:
+                    if self.args.fw_bundle and icon_in_api:
                         path = fullfilename.removeprefix(self.args.input_directory)[1:]
                         paths.append(
                             (icon_name, path.replace("\\", "/").rsplit(".", 1)[0])
@@ -260,7 +275,7 @@ class Main(App):
                     frame_count=frame_count,
                 )
             )
-        if not is_main_assets:
+        if not self.args.fw_bundle:
             icons_c.write("\n")
         else:
             icon_paths = "\n".join(
@@ -280,9 +295,9 @@ class Main(App):
         icons_h.write(ICONS_TEMPLATE_H_HEADER)
         for name, width, height, frame_rate, frame_count in icons:
             icons_h.write(ICONS_TEMPLATE_H_ICON_NAME.format(name=name))
-        if is_main_assets:
+        if self.args.fw_bundle:
             icons_h.write(ICONS_TEMPLATE_H_ICON_PATHS)
-        else:
+        if self.args.add_include:
             icons_h.write("#include <assets_icons.h>\n")
         icons_h.close()
         self.logger.debug("Done")

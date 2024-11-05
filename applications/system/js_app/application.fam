@@ -5,6 +5,7 @@ App(
     cdefines=["JS_RUNNER_FAP"],
     fap_icon="icon.png",
     fap_category="assets",
+    fap_libs=["assets"],
     entry_point="js_app",
     stack_size=2 * 1024,
     resources="examples",
@@ -35,6 +36,7 @@ App(
         "modules/js_flipper.c",
         "modules/js_tests.c",
     ],
+    fap_libs=["assets"],
 )
 
 App(
