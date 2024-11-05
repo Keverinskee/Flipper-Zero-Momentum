@@ -11,11 +11,20 @@ ICONS_SUPPORTED_FORMATS = ["png"]
 
 ICONS_TEMPLATE_H_HEADER = """#pragma once
 
-#include <furi.h>
+#include <stddef.h>
 #include <gui/icon.h>
 
 """
 ICONS_TEMPLATE_H_ICON_NAME = "extern const Icon {name};\n"
+ICONS_TEMPLATE_H_ICON_PATHS = """
+typedef struct {
+    const Icon* icon;
+    const char* path;
+} IconPath;
+
+extern const IconPath ICON_PATHS[];
+extern const size_t ICON_PATHS_COUNT;
+"""
 
 ICONS_TEMPLATE_C_HEADER = """#include "{assets_filename}.h"
 
@@ -25,6 +34,15 @@ ICONS_TEMPLATE_C_HEADER = """#include "{assets_filename}.h"
 ICONS_TEMPLATE_C_FRAME = "const uint8_t {name}[] = {data};\n"
 ICONS_TEMPLATE_C_DATA = "const uint8_t* const {name}[] = {data};\n"
 ICONS_TEMPLATE_C_ICONS = "const Icon {name} = {{.width={width},.height={height},.frame_count={frame_count},.frame_rate={frame_rate},.frames=_{name}}};\n"
+ICONS_TEMPLATE_C_ICON_PATH = '    {{&{name}, "{path}"}},\n'
+ICONS_TEMPLATE_C_ICON_PATHS = """
+const IconPath ICON_PATHS[] = {{
+#ifndef FURI_RAM_EXEC
+{icon_paths}
+#endif
+}};
+const size_t ICON_PATHS_COUNT = COUNT_OF(ICON_PATHS);
+"""
 
 MAX_IMAGE_WIDTH = 2**16 - 1
 MAX_IMAGE_HEIGHT = 2**16 - 1
@@ -194,9 +212,9 @@ class Main(App):
                 )
                 icons_c.write("\n")
                 icons.append((icon_name, width, height, frame_rate, frame_count))
-                p = dirpath.removeprefix(self.args.input_directory)[1:]
-                if icon_in_api:
-                    paths.append((icon_name, p.replace("\\", "/")))
+                if is_main_assets and icon_in_api:
+                    path = dirpath.removeprefix(self.args.input_directory)[1:]
+                    paths.append((icon_name, path.replace("\\", "/")))
             else:
                 # process icons
                 for filename in filenames:
@@ -225,10 +243,10 @@ class Main(App):
                     )
                     icons_c.write("\n")
                     icons.append((icon_name, width, height, 0, 1))
-                    p = fullfilename.removeprefix(self.args.input_directory)[1:]
-                    if icon_in_api:
+                    if is_main_assets and icon_in_api:
+                        path = fullfilename.removeprefix(self.args.input_directory)[1:]
                         paths.append(
-                            (icon_name, p.replace("\\", "/").rsplit(".", 1)[0])
+                            (icon_name, path.replace("\\", "/").rsplit(".", 1)[0])
                         )
         # Create array of images:
         self.logger.debug("Finalizing source file")
@@ -242,21 +260,14 @@ class Main(App):
                     frame_count=frame_count,
                 )
             )
-        if is_main_assets:
-            icons_c.write(
-                """
-const IconPath ICON_PATHS[] = {
-#ifndef FURI_RAM_EXEC
-"""
+        if not is_main_assets:
+            icons_c.write("\n")
+        else:
+            icon_paths = "\n".join(
+                ICONS_TEMPLATE_C_ICON_PATH.format(name=name, path=path)
+                for name, path in paths
             )
-            for name, path in paths:
-                icons_c.write(f'    {{&{name}, "{path}"}},\n')
-            icons_c.write(
-                """#endif
-};
-const size_t ICON_PATHS_COUNT = COUNT_OF(ICON_PATHS);
-"""
-            )
+            icons_c.write(ICONS_TEMPLATE_C_ICON_PATHS.format(icon_paths=icon_paths))
         icons_c.close()
 
         # Create Public Header
@@ -270,17 +281,7 @@ const size_t ICON_PATHS_COUNT = COUNT_OF(ICON_PATHS);
         for name, width, height, frame_rate, frame_count in icons:
             icons_h.write(ICONS_TEMPLATE_H_ICON_NAME.format(name=name))
         if is_main_assets:
-            icons_h.write(
-                """
-typedef struct {
-    const Icon* icon;
-    const char* path;
-} IconPath;
-
-extern const IconPath ICON_PATHS[];
-extern const size_t ICON_PATHS_COUNT;
-"""
-            )
+            icons_h.write(ICONS_TEMPLATE_H_ICON_PATHS)
         else:
             icons_h.write("#include <assets_icons.h>\n")
         icons_h.close()
