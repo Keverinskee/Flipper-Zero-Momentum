@@ -62,6 +62,7 @@
     - FlipTrader
     - FlipWeather
     - FlipWiFi
+    - Web Crawler
   - Tools: uPython (by @ofabel)
   - Games: Umpire Indicator (by @RocketGod-git)
 - Sub-GHz:
