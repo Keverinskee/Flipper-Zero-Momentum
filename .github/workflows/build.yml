@@ -128,8 +128,8 @@ jobs:
           dfu_size_new=$(du --apparent-size -B 1 artifacts/flipper-z-${TARGET}-full-*.dfu | cut -f1)
           dfu_size_dev=$(du --apparent-size -B 1 dev.dfu | cut -f1)
           dfu_size_diff=$((dfu_size_new - dfu_size_dev))
-          DFU_SIZE=$(echo $dfu_size_new | numfmt --to=iec --format=%.2f)
-          DFU_DIFF=$(echo $dfu_size_diff | numfmt --to=iec --format=%.2f | sed -r 's/^([^-])/+\1/')
+          DFU_SIZE=$(echo $dfu_size_new | numfmt --to=iec-i --format=%.2fB | sed 's/.00B$/B/')
+          DFU_DIFF=$(echo $dfu_size_diff | numfmt --to=iec-i --format=%.2fB | sed 's/.00B$/B/' | sed -r 's/^([^-])/+\1/')
           echo "DFU_SIZE=$DFU_SIZE" >> $GITHUB_ENV
           echo "DFU_DIFF=$DFU_DIFF" >> $GITHUB_ENV
 
@@ -139,8 +139,8 @@ jobs:
           min_gap=$((2 * 4 * 1024))
           flash_free_total=$((radio_addr - flash_base - dfu_size_new))
           flash_free_usable=$((flash_free_total - min_gap))
-          FLASH_FREE=$(echo $flash_free_total | numfmt --to=iec --format=%.2f)
-          FLASH_USABLE=$(echo $flash_free_usable | numfmt --to=iec --format=%.2f)
+          FLASH_FREE=$(echo $flash_free_total | numfmt --to=iec-i --format=%.2fB | sed 's/.00B$/B/')
+          FLASH_USABLE=$(echo $flash_free_usable | numfmt --to=iec-i --format=%.2fB | sed 's/.00B$/B/')
           echo "FLASH_FREE=$FLASH_FREE" >> $GITHUB_ENV
           echo "FLASH_USABLE=$FLASH_USABLE" >> $GITHUB_ENV
 
