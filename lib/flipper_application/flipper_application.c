@@ -143,7 +143,7 @@ static bool flipper_application_process_manifest_section(
                   storage_file_read(file, manifest, size) == size;
 
     // Default flags when loading OFW manifests that don't include flags
-    if(result && size == sizeof(FlipperApplicationManifestOfw)) {
+    if(result && size < sizeof(FlipperApplicationManifestEx)) {
         manifest->flags = FlipperApplicationFlagDefault;
     }
 
