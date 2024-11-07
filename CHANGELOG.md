@@ -102,6 +102,7 @@
   - Added `illegalSymbols` prop for `gui/text_input` view (#290 by @Willy-JL)
   - Added typedocs for all extra JS modules in Momentum (by @Willy-JL)
 - RPC: Added ASCII event support (#284 by @Willy-JL)
+- FBT/SDK: New app flag UnloadAssetPacks to free RAM in heavy apps like NFC, MFKey, uPython (#260 by @Willy-JL)
 - OFW: Settings: Clock editing & Alarm function (目覚め時計) (by @skotopes)
 - BadKB:
   - OFW: Add linux/gnome badusb demo files (by @thomasnemer)
