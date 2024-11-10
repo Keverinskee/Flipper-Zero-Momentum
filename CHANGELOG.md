@@ -200,6 +200,7 @@
   - OFW: Fix detection of GProx II cards and false detection of other cards (by @Astrrra)
   - OFW: Fix Guard GProxII False Positive and 36-bit Parsing (by @zinongli)
   - OFW: GProxII Fix Writing and Rendering Conflict (by @zinongli)
+- Asset Packer: Fix font terminator causing freezes/crashes, like in Marauder AP scan/list (#295 by @Willy-JL)
 - Desktop:
   - Fallback Poweroff prompt when power settings is unavailable (by @Willy-JL)
 - Sub-GHz:
