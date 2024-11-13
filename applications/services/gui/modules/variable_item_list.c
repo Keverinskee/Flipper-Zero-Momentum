@@ -110,10 +110,11 @@ static void zapper_menu_draw(Canvas* canvas, VariableItemListModel* model) {
         zapper_menu->current_page,
         zapper_menu->total_pages);
 
+    const uint8_t draw_count = end_option - start_option;
 //frame
 #define GAP_SIZE_PX  1
 #define FRAME_HEIGHT 14
-    for(int i = 0; i < 4; i++) {
+    for(int i = 0; i < draw_count; i++) {
         uint8_t y = i * (FRAME_HEIGHT + GAP_SIZE_PX);
         canvas_draw_rframe(canvas, 0, y, canvas_width(canvas), FRAME_HEIGHT, 3);
     }
@@ -124,12 +125,15 @@ static void zapper_menu_draw(Canvas* canvas, VariableItemListModel* model) {
     // ^
     canvas_draw_triangle(
         canvas, arrow_x, 16 - (16 - 9) / 2 - 3, ARROR_SIZE, ARROR_SIZE, CanvasDirectionBottomToTop);
+    if(draw_count == 1) return;
     // <
     canvas_draw_triangle(
         canvas, arrow_x + 9 / 2, 24 - 2, ARROR_SIZE, ARROR_SIZE, CanvasDirectionRightToLeft);
+    if(draw_count == 2) return;
     // >
     canvas_draw_triangle(
         canvas, arrow_x - 9 / 2 + 2, 40 - 4, ARROR_SIZE, ARROR_SIZE, CanvasDirectionLeftToRight);
+    if(draw_count == 3) return;
     // v
     canvas_draw_triangle(
         canvas, arrow_x, 16 * 3 + 6 - 6, ARROR_SIZE, ARROR_SIZE, CanvasDirectionTopToBottom);
