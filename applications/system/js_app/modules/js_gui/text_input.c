@@ -8,6 +8,7 @@
 typedef struct {
     char* buffer;
     size_t buffer_size;
+    size_t default_text_size;
     FuriString* header;
     bool default_text_clear;
     FuriSemaphore* input_semaphore;
@@ -49,7 +50,14 @@ static bool max_len_assign(
     JsViewPropValue value,
     JsKbdContext* context) {
     UNUSED(mjs);
-    context->buffer_size = (size_t)(value.number + 1);
+    size_t new_buffer_size = value.number + 1;
+    if(new_buffer_size < context->default_text_size) {
+        // Avoid confusing parameters from user
+        mjs_prepend_errorf(
+            mjs, MJS_BAD_ARGS_ERROR, "maxLength must be larger than defaultText length");
+        return false;
+    }
+    context->buffer_size = new_buffer_size;
     context->buffer = realloc(context->buffer, context->buffer_size); //-V701
     text_input_set_result_callback(
         input,
@@ -70,7 +78,14 @@ static bool default_text_assign(
     UNUSED(input);
 
     if(value.string) {
-        strlcpy(context->buffer, value.string, context->buffer_size);
+        context->default_text_size = strlen(value.string) + 1;
+        if(context->buffer_size < context->default_text_size) {
+            // Ensure buffer is large enough for defaultData
+            context->buffer_size = context->default_text_size;
+            context->buffer = realloc(context->buffer, context->buffer_size); //-V701
+        }
+        // Also trim excess previous data with strlcpy()
+        strlcpy(context->buffer, value.string, context->buffer_size); //-V575
         text_input_set_result_callback(
             input,
             (TextInputCallback)input_callback,
@@ -97,6 +112,18 @@ static bool default_text_clear_assign(
         context->buffer,
         context->buffer_size,
         context->default_text_clear);
+    return true;
+}
+
+static bool illegal_symbols_assign(
+    struct mjs* mjs,
+    TextInput* input,
+    JsViewPropValue value,
+    JsKbdContext* context) {
+    UNUSED(mjs);
+    UNUSED(context);
+
+    text_input_show_illegal_symbols(input, value.boolean);
     return true;
 }
 
@@ -146,7 +173,7 @@ static const JsViewDescriptor view_descriptor = {
     .get_view = (JsViewGetView)text_input_get_view,
     .custom_make = (JsViewCustomMake)ctx_make,
     .custom_destroy = (JsViewCustomDestroy)ctx_destroy,
-    .prop_cnt = 5,
+    .prop_cnt = 6,
     .props = {
         (JsViewPropDescriptor){
             .name = "header",
@@ -168,6 +195,10 @@ static const JsViewDescriptor view_descriptor = {
             .name = "defaultTextClear",
             .type = JsViewPropTypeBool,
             .assign = (JsViewPropAssign)default_text_clear_assign},
+        (JsViewPropDescriptor){
+            .name = "illegalSymbols",
+            .type = JsViewPropTypeBool,
+            .assign = (JsViewPropAssign)illegal_symbols_assign},
     }};
 
 JS_GUI_VIEW_DEF(text_input, &view_descriptor);
