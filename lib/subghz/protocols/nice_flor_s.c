@@ -869,7 +869,7 @@ void subghz_protocol_decoder_nice_flor_s_get_string(void* context, FuriString* o
         furi_string_cat_printf(
             output,
             "%s %dbit\r\n"
-            "Key:0x%013llX%llX\r\n"
+            "Key:%013llX%llX\r\n"
             "Sn:%05lX\r\n"
             "Cnt:%04lX Btn:%02X\r\n",
             NICE_ONE_NAME,

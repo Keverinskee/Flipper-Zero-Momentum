@@ -26,7 +26,7 @@ export declare function getBatteryCharge(): number;
  * @warning Do **NOT** use this to check the presence or absence of features. If
  *          you do, I'm gonna be sad :( Instead, refer to `checkSdkFeatures` and
  *          other similar mechanisms.
- * @note Momentum firmware reports `"momentum"`.
+ * @note Momentum firmware reports `"momentum"`. / Official firmware reports `"flipperdevices"`.
  * @version Added in JS SDK 0.1
  */
 export declare const firmwareVendor: string;
