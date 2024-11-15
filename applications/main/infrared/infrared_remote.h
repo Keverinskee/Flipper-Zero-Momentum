@@ -1,3 +1,14 @@
+/**
+ * @file infrared_remote.h
+ * @brief Infrared remote library.
+ *
+ * An infrared remote contains zero or more infrared signals which
+ * have a (possibly non-unique) name each.
+ *
+ * The current implementation does load only the names into the memory,
+ * while the signals themselves are loaded on-demand one by one. In theory,
+ * this should allow for quite large remotes with relatively bulky signals.
+ */
 #pragma once
 
 #include "infrared_signal.h"
