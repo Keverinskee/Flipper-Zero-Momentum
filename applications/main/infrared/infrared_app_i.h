@@ -66,6 +66,9 @@ typedef enum {
     InfraredEditTargetNone, /**< No editing target is selected. */
     InfraredEditTargetRemote, /**< Whole remote is selected as editing target. */
     InfraredEditTargetButton, /**< Single button is selected as editing target. */
+    InfraredEditTargetMetadataBrand, // New
+    InfraredEditTargetMetadataDeviceType, // New
+    InfraredEditTargetMetadataModel, // New
 } InfraredEditTarget;
 
 /**

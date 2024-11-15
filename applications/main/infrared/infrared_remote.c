@@ -6,8 +6,7 @@
 #include <toolbox/path.h>
 #include <storage/storage.h>
 
-#define TAG "InfraredRemote"
-
+#define TAG                     "InfraredRemote"
 #define INFRARED_FILE_HEADER    "IR signals file"
 #define INFRARED_LIBRARY_HEADER "IR library file"
 #define INFRARED_FILE_VERSION   (1)
@@ -18,6 +17,7 @@ struct InfraredRemote {
     StringArray_t signal_names;
     FuriString* name;
     FuriString* path;
+    InfraredMetadata* metadata; // Added metadata field
 };
 
 typedef struct {
@@ -43,6 +43,7 @@ InfraredRemote* infrared_remote_alloc(void) {
     StringArray_init(remote->signal_names);
     remote->name = furi_string_alloc();
     remote->path = furi_string_alloc();
+    remote->metadata = infrared_metadata_alloc(); // Allocate metadata
     return remote;
 }
 
@@ -50,13 +51,18 @@ void infrared_remote_free(InfraredRemote* remote) {
     StringArray_clear(remote->signal_names);
     furi_string_free(remote->path);
     furi_string_free(remote->name);
+    infrared_metadata_free(remote->metadata); // Free metadata
     free(remote);
 }
-
 void infrared_remote_reset(InfraredRemote* remote) {
     StringArray_reset(remote->signal_names);
     furi_string_reset(remote->name);
     furi_string_reset(remote->path);
+    infrared_metadata_reset(remote->metadata); // Reset metadata
+}
+
+InfraredMetadata* infrared_remote_get_metadata(const InfraredRemote* remote) {
+    return remote->metadata;
 }
 
 const char* infrared_remote_get_name(const InfraredRemote* remote) {
@@ -391,6 +397,12 @@ InfraredErrorCode infrared_remote_create(InfraredRemote* remote, const char* pat
         if(!flipper_format_write_header_cstr(ff, INFRARED_FILE_HEADER, INFRARED_FILE_VERSION))
             break;
 
+        // Write initial metadata
+        if(remote->metadata) {
+            InfraredErrorCode error = infrared_metadata_save(remote->metadata, ff);
+            if(INFRARED_ERROR_PRESENT(error)) break;
+        }
+
         success = true;
     } while(false);
 
@@ -399,17 +411,16 @@ InfraredErrorCode infrared_remote_create(InfraredRemote* remote, const char* pat
 
     return success ? InfraredErrorCodeNone : InfraredErrorCodeFileOperationFailed;
 }
-
 InfraredErrorCode infrared_remote_load(InfraredRemote* remote, const char* path) {
     FURI_LOG_I(TAG, "Loading file: '%s'", path);
 
     Storage* storage = furi_record_open(RECORD_STORAGE);
     FlipperFormat* ff = flipper_format_buffered_file_alloc(storage);
-
     FuriString* tmp = furi_string_alloc();
     InfraredErrorCode error = InfraredErrorCodeNone;
 
     do {
+        // First read - metadata
         if(!flipper_format_buffered_file_open_existing(ff, path)) {
             error = InfraredErrorCodeFileOperationFailed;
             break;
@@ -418,12 +429,6 @@ InfraredErrorCode infrared_remote_load(InfraredRemote* remote, const char* path)
         uint32_t version;
         if(!flipper_format_read_header(ff, tmp, &version)) {
             error = InfraredErrorCodeFileOperationFailed;
-            break;
-        }
-
-        if(furi_string_equal(tmp, INFRARED_LIBRARY_HEADER)) {
-            FURI_LOG_E(TAG, "Library file can't be loaded in this context");
-            error = InfraredErrorCodeWrongFileType;
             break;
         }
 
@@ -440,11 +445,29 @@ InfraredErrorCode infrared_remote_load(InfraredRemote* remote, const char* path)
         }
 
         infrared_remote_set_path(remote, path);
-        StringArray_reset(remote->signal_names);
+        if(remote->metadata) {
+            infrared_metadata_read(remote->metadata, ff);
+        }
+        flipper_format_free(ff);
 
+        // Second read - signals
+        ff = flipper_format_buffered_file_alloc(storage);
+        if(!flipper_format_buffered_file_open_existing(ff, path)) {
+            error = InfraredErrorCodeFileOperationFailed;
+            break;
+        }
+
+        // Skip header again
+        if(!flipper_format_read_header(ff, tmp, &version)) {
+            error = InfraredErrorCodeFileOperationFailed;
+            break;
+        }
+
+        StringArray_reset(remote->signal_names);
         while(infrared_signal_read_name(ff, tmp) == InfraredErrorCodeNone) {
             StringArray_push_back(remote->signal_names, furi_string_get_cstr(tmp));
         }
+
     } while(false);
 
     furi_string_free(tmp);
@@ -452,6 +475,32 @@ InfraredErrorCode infrared_remote_load(InfraredRemote* remote, const char* path)
     furi_record_close(RECORD_STORAGE);
 
     return error;
+}
+static InfraredErrorCode infrared_remote_update_metadata_callback(
+    const InfraredBatch* batch,
+    const InfraredBatchTarget* target) {
+    UNUSED(target);
+
+    // First write header and metadata at the start of the file
+    if(batch->signal_index == 0 && batch->remote->metadata) {
+        InfraredErrorCode error = infrared_metadata_save(batch->remote->metadata, batch->ff_out);
+        if(error != InfraredErrorCodeNone) {
+            return error;
+        }
+    }
+
+    // Write existing signal
+    return infrared_signal_save(
+        batch->signal, batch->ff_out, furi_string_get_cstr(batch->signal_name));
+}
+InfraredErrorCode infrared_remote_update_metadata(InfraredRemote* remote) {
+    const InfraredBatchTarget target = {.signal_index = 0, .signal_name = NULL, .signal = NULL};
+
+    return infrared_remote_batch_start(remote, infrared_remote_update_metadata_callback, &target);
+}
+
+InfraredErrorCode infrared_remote_save(InfraredRemote* remote) {
+    return infrared_remote_update_metadata(remote);
 }
 
 InfraredErrorCode infrared_remote_rename(InfraredRemote* remote, const char* new_path) {

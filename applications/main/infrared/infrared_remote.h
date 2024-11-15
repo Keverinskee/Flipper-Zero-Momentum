@@ -1,22 +1,28 @@
-/**
- * @file infrared_remote.h
- * @brief Infrared remote library.
- *
- * An infrared remote contains zero or more infrared signals which
- * have a (possibly non-unique) name each.
- *
- * The current implementation does load only the names into the memory,
- * while the signals themselves are loaded on-demand one by one. In theory,
- * this should allow for quite large remotes with relatively bulky signals.
- */
 #pragma once
 
 #include "infrared_signal.h"
+#include "infrared_metadata.h"
 
 /**
  * @brief InfraredRemote opaque type declaration.
  */
 typedef struct InfraredRemote InfraredRemote;
+
+/**
+ * @brief Get metadata associated with a remote
+ * 
+ * @param[in] remote pointer to the remote instance
+ * @returns pointer to the metadata instance
+ */
+InfraredMetadata* infrared_remote_get_metadata(const InfraredRemote* remote);
+
+/**
+ * @brief Save current metadata to remote
+ *
+ * @param[in,out] remote pointer to the instance to be updated.
+ * @returns InfraredErrorCodeNone if metadata was successfully saved, otherwise error code.
+ */
+InfraredErrorCode infrared_remote_save(InfraredRemote* remote);
 
 /**
  * @brief Create a new InfraredRemote instance.
