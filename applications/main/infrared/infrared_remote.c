@@ -420,7 +420,7 @@ InfraredErrorCode infrared_remote_load(InfraredRemote* remote, const char* path)
     InfraredErrorCode error = InfraredErrorCodeNone;
 
     do {
-        // First read - metadata
+        // First read - header and metadata
         if(!flipper_format_buffered_file_open_existing(ff, path)) {
             error = InfraredErrorCodeFileOperationFailed;
             break;
@@ -445,8 +445,17 @@ InfraredErrorCode infrared_remote_load(InfraredRemote* remote, const char* path)
         }
 
         infrared_remote_set_path(remote, path);
+        
+        // Read metadata right after header
         if(remote->metadata) {
+            FURI_LOG_D(TAG, "Reading metadata");
             infrared_metadata_read(remote->metadata, ff);
+            FURI_LOG_D(
+                TAG, 
+                "Loaded metadata - Brand: %s, Type: %s, Model: %s",
+                infrared_metadata_get_brand(remote->metadata),
+                infrared_metadata_get_device_type(remote->metadata),
+                infrared_metadata_get_model(remote->metadata));
         }
         flipper_format_free(ff);
 
@@ -463,6 +472,7 @@ InfraredErrorCode infrared_remote_load(InfraredRemote* remote, const char* path)
             break;
         }
 
+        // Read all signal names
         StringArray_reset(remote->signal_names);
         while(infrared_signal_read_name(ff, tmp) == InfraredErrorCodeNone) {
             StringArray_push_back(remote->signal_names, furi_string_get_cstr(tmp));

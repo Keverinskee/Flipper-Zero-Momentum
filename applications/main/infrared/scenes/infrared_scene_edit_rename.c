@@ -37,63 +37,45 @@ static int32_t infrared_scene_edit_rename_task_callback(void* context) {
 }
 void infrared_scene_edit_rename_on_enter(void* context) {
     InfraredApp* infrared = context;
-    const InfraredEditTarget edit_target = infrared->app_state.edit_target;
-
-    scene_manager_set_scene_state(infrared->scene_manager, InfraredSceneEditRename, 0);
-
-    InfraredRemote* remote = infrared->remote;
     TextInput* text_input = infrared->text_input;
+    const InfraredEditTarget edit_target = infrared->app_state.edit_target;
+    InfraredMetadata* metadata = infrared_remote_get_metadata(infrared->remote);
     size_t enter_name_length = 0;
-    InfraredMetadata* metadata = infrared_remote_get_metadata(remote);
 
     if(edit_target == InfraredEditTargetButton) {
         text_input_set_header_text(text_input, "Name the button");
-
         const int32_t current_button_index = infrared->app_state.current_button_index;
         furi_check(current_button_index != InfraredButtonIndexNone);
-
         enter_name_length = INFRARED_MAX_BUTTON_NAME_LENGTH;
         strlcpy(
             infrared->text_store[0],
-            infrared_remote_get_signal_name(remote, current_button_index),
+            infrared_remote_get_signal_name(infrared->remote, current_button_index),
             enter_name_length);
-
     } else if(edit_target == InfraredEditTargetRemote) {
         text_input_set_header_text(text_input, "Name the remote");
         enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
-        strlcpy(infrared->text_store[0], infrared_remote_get_name(remote), enter_name_length);
-
-        FuriString* folder_path;
-        folder_path = furi_string_alloc();
-
-        if(furi_string_end_with(infrared->file_path, INFRARED_APP_EXTENSION)) {
-            path_extract_dirname(furi_string_get_cstr(infrared->file_path), folder_path);
-        }
-
-        ValidatorIsFile* validator_is_file = validator_is_file_alloc_init(
-            furi_string_get_cstr(folder_path),
-            INFRARED_APP_EXTENSION,
-            infrared_remote_get_name(remote));
-        text_input_set_validator(text_input, validator_is_file_callback, validator_is_file);
-
-        furi_string_free(folder_path);
-
+        strlcpy(infrared->text_store[0], infrared_remote_get_name(infrared->remote), enter_name_length);
     } else if(edit_target == InfraredEditTargetMetadataBrand) {
         text_input_set_header_text(text_input, "Enter brand name");
+        enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
         strlcpy(
             infrared->text_store[0],
             infrared_metadata_get_brand(metadata),
-            INFRARED_MAX_REMOTE_NAME_LENGTH);
-
+            enter_name_length);
+    } else if(edit_target == InfraredEditTargetMetadataDeviceType) {
+        text_input_set_header_text(text_input, "Enter device type");
+        enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
+        strlcpy(
+            infrared->text_store[0],
+            infrared_metadata_get_device_type(metadata),
+            enter_name_length);
     } else if(edit_target == InfraredEditTargetMetadataModel) {
-        text_input_set_header_text(text_input, "Enter device model");
+        text_input_set_header_text(text_input, "Enter model name");
+        enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
         strlcpy(
             infrared->text_store[0],
             infrared_metadata_get_model(metadata),
-            INFRARED_MAX_REMOTE_NAME_LENGTH);
-
-    } else {
-        furi_crash();
+            enter_name_length);
     }
 
     text_input_set_result_callback(

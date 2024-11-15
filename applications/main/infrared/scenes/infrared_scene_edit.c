@@ -7,9 +7,7 @@ typedef enum {
     SubmenuIndexDeleteButton,
     SubmenuIndexRenameRemote,
     SubmenuIndexDeleteRemote,
-    SubmenuIndexEditMetadataBrand, // New
-    SubmenuIndexEditMetadataDeviceType, // New
-    SubmenuIndexEditMetadataModel, // New
+    SubmenuIndexEditMetadata,
 } SubmenuIndex;
 
 static void infrared_scene_edit_submenu_callback(void* context, uint32_t index) {
@@ -58,24 +56,10 @@ void infrared_scene_edit_on_enter(void* context) {
         SubmenuIndexDeleteRemote,
         infrared_scene_edit_submenu_callback,
         context);
-
-    // Add new metadata menu items
     submenu_add_item(
         submenu,
-        "Edit Brand",
-        SubmenuIndexEditMetadataBrand,
-        infrared_scene_edit_submenu_callback,
-        context);
-    submenu_add_item(
-        submenu,
-        "Edit Device Type",
-        SubmenuIndexEditMetadataDeviceType,
-        infrared_scene_edit_submenu_callback,
-        context);
-    submenu_add_item(
-        submenu,
-        "Edit Model",
-        SubmenuIndexEditMetadataModel,
+        "Edit Metadata  >",
+        SubmenuIndexEditMetadata,
         infrared_scene_edit_submenu_callback,
         context);
 
@@ -122,21 +106,8 @@ bool infrared_scene_edit_on_event(void* context, SceneManagerEvent event) {
             infrared->app_state.edit_mode = InfraredEditModeDelete;
             scene_manager_next_scene(scene_manager, InfraredSceneEditDelete);
             consumed = true;
-        }
-        // Handle metadata menu selections
-        else if(submenu_index == SubmenuIndexEditMetadataBrand) {
-            infrared->app_state.edit_target = InfraredEditTargetMetadataBrand;
-            infrared->app_state.edit_mode = InfraredEditModeRename;
-            scene_manager_next_scene(scene_manager, InfraredSceneEditRename);
-            consumed = true;
-        } else if(submenu_index == SubmenuIndexEditMetadataDeviceType) {
-            infrared->app_state.edit_target = InfraredEditTargetMetadataDeviceType;
-            scene_manager_next_scene(scene_manager, InfraredSceneEditSelectDeviceType);
-            consumed = true;
-        } else if(submenu_index == SubmenuIndexEditMetadataModel) {
-            infrared->app_state.edit_target = InfraredEditTargetMetadataModel;
-            infrared->app_state.edit_mode = InfraredEditModeRename;
-            scene_manager_next_scene(scene_manager, InfraredSceneEditRename);
+        } else if(submenu_index == SubmenuIndexEditMetadata) {
+            scene_manager_next_scene(scene_manager, InfraredSceneEditMetadata);
             consumed = true;
         }
     }
