@@ -445,13 +445,13 @@ InfraredErrorCode infrared_remote_load(InfraredRemote* remote, const char* path)
         }
 
         infrared_remote_set_path(remote, path);
-        
+
         // Read metadata right after header
         if(remote->metadata) {
             FURI_LOG_D(TAG, "Reading metadata");
             infrared_metadata_read(remote->metadata, ff);
             FURI_LOG_D(
-                TAG, 
+                TAG,
                 "Loaded metadata - Brand: %s, Type: %s, Model: %s",
                 infrared_metadata_get_brand(remote->metadata),
                 infrared_metadata_get_device_type(remote->metadata),

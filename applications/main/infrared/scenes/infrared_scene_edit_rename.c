@@ -54,14 +54,14 @@ void infrared_scene_edit_rename_on_enter(void* context) {
     } else if(edit_target == InfraredEditTargetRemote) {
         text_input_set_header_text(text_input, "Name the remote");
         enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
-        strlcpy(infrared->text_store[0], infrared_remote_get_name(infrared->remote), enter_name_length);
+        strlcpy(
+            infrared->text_store[0],
+            infrared_remote_get_name(infrared->remote),
+            enter_name_length);
     } else if(edit_target == InfraredEditTargetMetadataBrand) {
         text_input_set_header_text(text_input, "Enter brand name");
         enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
-        strlcpy(
-            infrared->text_store[0],
-            infrared_metadata_get_brand(metadata),
-            enter_name_length);
+        strlcpy(infrared->text_store[0], infrared_metadata_get_brand(metadata), enter_name_length);
     } else if(edit_target == InfraredEditTargetMetadataDeviceType) {
         text_input_set_header_text(text_input, "Enter device type");
         enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
@@ -72,10 +72,7 @@ void infrared_scene_edit_rename_on_enter(void* context) {
     } else if(edit_target == InfraredEditTargetMetadataModel) {
         text_input_set_header_text(text_input, "Enter model name");
         enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
-        strlcpy(
-            infrared->text_store[0],
-            infrared_metadata_get_model(metadata),
-            enter_name_length);
+        strlcpy(infrared->text_store[0], infrared_metadata_get_model(metadata), enter_name_length);
     }
 
     text_input_set_result_callback(
