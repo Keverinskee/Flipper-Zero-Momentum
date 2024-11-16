@@ -8,6 +8,7 @@ typedef enum {
     SubmenuIndexRenameRemote,
     SubmenuIndexDeleteRemote,
     SubmenuIndexEditMetadata,
+    SubmenuIndexContributeIR,
 } SubmenuIndex;
 
 static void infrared_scene_edit_submenu_callback(void* context, uint32_t index) {
@@ -58,10 +59,17 @@ void infrared_scene_edit_on_enter(void* context) {
         context);
     submenu_add_item(
         submenu,
+        "Contribute IR",
+        SubmenuIndexContributeIR,
+        infrared_scene_edit_submenu_callback,
+        context);
+    submenu_add_item(
+        submenu,
         "Edit Metadata  >",
         SubmenuIndexEditMetadata,
         infrared_scene_edit_submenu_callback,
         context);
+
 
     const uint32_t submenu_index = scene_manager_get_scene_state(scene_manager, InfraredSceneEdit);
     submenu_set_selected_item(submenu, submenu_index);
@@ -108,6 +116,9 @@ bool infrared_scene_edit_on_event(void* context, SceneManagerEvent event) {
             consumed = true;
         } else if(submenu_index == SubmenuIndexEditMetadata) {
             scene_manager_next_scene(scene_manager, InfraredSceneEditMetadata);
+            consumed = true;
+        } else if(submenu_index == SubmenuIndexContributeIR) {
+            scene_manager_next_scene(scene_manager, InfraredSceneContribute);
             consumed = true;
         }
     }

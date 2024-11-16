@@ -97,6 +97,7 @@ typedef struct {
     int32_t prev_button_index; /**< Previous button index (move source). */
     uint32_t last_transmit_time; /**< Lat time a signal was transmitted. */
     FuriHalInfraredTxPin tx_pin;
+    bool is_contributing_remote;
 } InfraredAppState;
 
 /**

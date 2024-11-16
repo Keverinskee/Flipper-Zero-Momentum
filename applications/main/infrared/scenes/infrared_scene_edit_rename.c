@@ -161,7 +161,20 @@ bool infrared_scene_edit_rename_on_event(void* context, SceneManagerEvent event)
                     break;
                 }
                 infrared_remote_save(remote);
-                scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
+
+                // Chain to next metadata input if in contribute flow
+                if(infrared->app_state.is_contributing_remote) {
+                    if(infrared->app_state.edit_target == InfraredEditTargetMetadataBrand) {
+                        infrared->app_state.edit_target = InfraredEditTargetMetadataModel;
+                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
+                    } else if(infrared->app_state.edit_target == InfraredEditTargetMetadataModel) {
+                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditSelectDeviceType);
+                    } else {
+                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
+                    }
+                } else {
+                    scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
+                }
             }
             consumed = true;
         } else if(event.event == InfraredCustomEventTypeTaskFinished) {

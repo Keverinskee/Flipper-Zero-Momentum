@@ -84,7 +84,11 @@ bool infrared_scene_edit_select_device_type_on_event(void* context, SceneManager
         infrared_metadata_set_device_type(metadata, device_types[event.event].value);
         infrared_remote_save(remote);
 
-        // Show the saved popup
+        if(infrared->app_state.is_contributing_remote) {
+            // Clear contribution flag when done with the flow
+            infrared->app_state.is_contributing_remote = false;
+        }
+        
         scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
         consumed = true;
     } else if(event.type == SceneManagerEventTypeBack) {
