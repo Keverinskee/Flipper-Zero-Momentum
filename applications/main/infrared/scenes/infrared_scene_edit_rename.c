@@ -29,6 +29,12 @@ static int32_t infrared_scene_edit_rename_task_callback(void* context) {
 
 void infrared_scene_edit_rename_on_enter(void* context) {
     InfraredApp* infrared = context;
+    FURI_LOG_I(
+        "IR_CONTRIB",
+        "Edit rename on_enter: edit_target=%d, is_contributing=%d",
+        infrared->app_state.edit_target,
+        infrared->app_state.is_contributing_remote);
+
     TextInput* text_input = infrared->text_input;
     FuriString* temp_str = furi_string_alloc();
     size_t enter_name_length = 0;
@@ -123,35 +129,85 @@ bool infrared_scene_edit_rename_on_event(void* context, SceneManagerEvent event)
     InfraredApp* infrared = context;
     bool consumed = false;
 
+    FURI_LOG_I(
+        "IR_CONTRIB",
+        "Edit rename event: type=%d, event=%lu, edit_target=%d, is_contributing=%d",
+        event.type,
+        event.event,
+        infrared->app_state.edit_target,
+        infrared->app_state.is_contributing_remote);
+
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == InfraredCustomEventTypeTextEditDone) {
-            if(infrared->app_state.edit_target == InfraredEditTargetButton ||
-               infrared->app_state.edit_target == InfraredEditTargetRemote) {
-                // Use original task-based rename for buttons and remotes
-                infrared_blocking_task_start(infrared, infrared_scene_edit_rename_task_callback);
-            } else {
-                // Handle metadata updates directly
+            FURI_LOG_I("IR_CONTRIB", "Text edit done received");
+
+            // Handle metadata updates first
+            if(infrared->app_state.edit_target == InfraredEditTargetMetadataBrand ||
+               infrared->app_state.edit_target == InfraredEditTargetMetadataModel ||
+               infrared->app_state.edit_target == InfraredEditTargetMetadataContributor ||
+               infrared->app_state.edit_target == InfraredEditTargetMetadataRemoteModel ||
+               infrared->app_state.edit_target == InfraredEditTargetSignal) {
+                FURI_LOG_I("IR_CONTRIB", "Handling metadata update");
                 InfraredRemote* remote = infrared->remote;
                 InfraredMetadata* metadata = infrared_remote_get_metadata(remote);
 
                 switch(infrared->app_state.edit_target) {
                 case InfraredEditTargetMetadataBrand:
+                    FURI_LOG_I(
+                        "IR_CONTRIB", "Processing brand update, text=%s", infrared->text_store[0]);
                     infrared_metadata_set_brand(metadata, infrared->text_store[0]);
+                    if(infrared->app_state.is_contributing_remote) {
+                        FURI_LOG_I("IR_CONTRIB", "Setting next target to model");
+                        infrared->app_state.edit_target = InfraredEditTargetMetadataModel;
+                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
+                    } else {
+                        FURI_LOG_I("IR_CONTRIB", "Not in contribute mode, going to rename done");
+                        scene_manager_next_scene(
+                            infrared->scene_manager, InfraredSceneEditRenameDone);
+                    }
                     break;
                 case InfraredEditTargetMetadataModel:
                     infrared_metadata_set_model(metadata, infrared->text_store[0]);
+                    if(infrared->app_state.is_contributing_remote) {
+                        scene_manager_next_scene(
+                            infrared->scene_manager, InfraredSceneEditSelectDeviceType);
+                    } else {
+                        scene_manager_next_scene(
+                            infrared->scene_manager, InfraredSceneEditRenameDone);
+                    }
                     break;
                 case InfraredEditTargetMetadataContributor:
                     infrared_metadata_set_contributor(metadata, infrared->text_store[0]);
+                    if(infrared->app_state.is_contributing_remote) {
+                        infrared->app_state.edit_target = InfraredEditTargetMetadataRemoteModel;
+                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
+                    } else {
+                        scene_manager_next_scene(
+                            infrared->scene_manager, InfraredSceneEditRenameDone);
+                    }
                     break;
                 case InfraredEditTargetMetadataRemoteModel:
                     infrared_metadata_set_remote_model(metadata, infrared->text_store[0]);
+                    if(infrared->app_state.is_contributing_remote) {
+                        infrared->app_state.edit_target = InfraredEditTargetSignal;
+                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
+                    } else {
+                        scene_manager_next_scene(
+                            infrared->scene_manager, InfraredSceneEditRenameDone);
+                    }
                     break;
                 case InfraredEditTargetSignal:
                     infrared_remote_rename_signal(
                         infrared->remote,
                         infrared->app_state.current_button_index,
                         infrared->text_store[0]);
+                    if(infrared->app_state.is_contributing_remote) {
+                        infrared->app_state.edit_target = InfraredEditTargetMetadataBrand;
+                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
+                    } else {
+                        scene_manager_next_scene(
+                            infrared->scene_manager, InfraredSceneEditRenameDone);
+                    }
                     break;
                 case InfraredEditTargetNone:
                 case InfraredEditTargetRemote:
@@ -161,53 +217,18 @@ bool infrared_scene_edit_rename_on_event(void* context, SceneManagerEvent event)
                     break;
                 }
                 infrared_remote_save(remote);
-
-                // Chain to next metadata input if in contribute flow
-                if(infrared->app_state.is_contributing_remote) {
-                    if(infrared->app_state.edit_target == InfraredEditTargetMetadataBrand) {
-                        infrared->app_state.edit_target = InfraredEditTargetMetadataModel;
-                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
-                    } else if(infrared->app_state.edit_target == InfraredEditTargetMetadataModel) {
-                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditSelectDeviceType);
-                    } else {
-                        scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
-                    }
-                } else {
-                    scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
-                }
-            }
-            consumed = true;
-        } else if(event.event == InfraredCustomEventTypeTaskFinished) {
-            const InfraredErrorCode task_error = infrared_blocking_task_finalize(infrared);
-
-            if(!INFRARED_ERROR_PRESENT(task_error)) {
-                scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
-            } else {
-                bool long_signal = INFRARED_ERROR_CHECK(
-                    task_error, InfraredErrorCodeSignalRawUnableToReadTooLongData);
-
-                const char* format = "Failed to rename\n%s";
-                const char* target = infrared->app_state.edit_target == InfraredEditTargetButton ?
-                                         "button" :
-                                         "file";
-                if(long_signal) {
-                    format = "Failed to rename\n\"%s\" is too long.\nTry to edit file from pc";
-                    target = infrared_remote_get_signal_name(
-                        infrared->remote, INFRARED_ERROR_GET_INDEX(task_error));
-                }
-
-                infrared_show_error_message(infrared, format, target);
-
-                const uint32_t possible_scenes[] = {InfraredSceneRemoteList, InfraredSceneRemote};
-                scene_manager_search_and_switch_to_previous_scene_one_of(
-                    infrared->scene_manager, possible_scenes, COUNT_OF(possible_scenes));
+                consumed = true;
             }
 
-            infrared->app_state.current_button_index = InfraredButtonIndexNone;
-            consumed = true;
+            // Handle button and remote renames with task
+            if(infrared->app_state.edit_target == InfraredEditTargetButton ||
+               infrared->app_state.edit_target == InfraredEditTargetRemote) {
+                FURI_LOG_I("IR_CONTRIB", "Starting button/remote rename task");
+                infrared_blocking_task_start(infrared, infrared_scene_edit_rename_task_callback);
+                consumed = true;
+            }
         }
     }
-
     return consumed;
 }
 
@@ -215,10 +236,20 @@ void infrared_scene_edit_rename_on_exit(void* context) {
     InfraredApp* infrared = context;
     TextInput* text_input = infrared->text_input;
 
+    // Clean up validator if it exists
     ValidatorIsFile* validator_context = text_input_get_validator_callback_context(text_input);
     if(validator_context) {
         validator_is_file_free(validator_context);
     }
 
+    // Reset text input
     text_input_reset(text_input);
+
+    // Don't reset state flags during the contribution flow
+    // Only reset if we're exiting abnormally (like back button)
+    if(infrared->app_state.is_contributing_remote &&
+       infrared->app_state.edit_target == InfraredEditTargetNone) {
+        infrared->app_state.is_contributing_remote = false;
+        infrared->app_state.edit_mode = InfraredEditModeNone;
+    }
 }

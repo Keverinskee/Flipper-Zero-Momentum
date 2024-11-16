@@ -1,29 +1,41 @@
 #include "../infrared_app_i.h"
 
-static void infrared_scene_contribute_popup_callback(void* context) {
+void infrared_scene_contribute_widget_callback(GuiButtonType result, InputType type, void* context) {
     InfraredApp* infrared = context;
-    if(infrared->app_state.is_contributing_remote) {
-        view_dispatcher_send_custom_event(infrared->view_dispatcher, InfraredCustomEventTypePopupClosed);
+    if(type == InputTypeShort) {
+        view_dispatcher_send_custom_event(infrared->view_dispatcher, result);
     }
 }
 
 void infrared_scene_contribute_on_enter(void* context) {
     InfraredApp* infrared = context;
-    Popup* popup = infrared->popup;
+    Widget* widget = infrared->widget;
 
-    popup_reset(popup);
-    
     infrared->app_state.is_contributing_remote = true;
+    FURI_LOG_I("IR_CONTRIB", "Set contributing state to true");
 
-    popup_set_header(popup, "Contribute IR", 64, 3, AlignCenter, AlignTop);
-    popup_set_text(popup, "This will prepare your\nremote for sharing by\nadding required metadata", 64, 25, AlignCenter, AlignTop);
-    
-    popup_set_callback(popup, infrared_scene_contribute_popup_callback);
-    popup_set_context(popup, infrared);
-    popup_set_timeout(popup, 2000);
-    popup_enable_timeout(popup);
+    // Add header text
+    widget_add_string_element(
+        widget, 64, 11, AlignCenter, AlignBottom, FontPrimary, "Contribute IR");
 
-    view_dispatcher_switch_to_view(infrared->view_dispatcher, InfraredViewPopup);
+    // Add body text
+    widget_add_string_multiline_element(
+        widget,
+        64,
+        46,
+        AlignCenter,
+        AlignBottom,
+        FontSecondary,
+        "This will prepare your\nremote for sharing by\nadding required metadata");
+
+    // Add buttons
+    widget_add_button_element(
+        widget, GuiButtonTypeLeft, "Back", infrared_scene_contribute_widget_callback, infrared);
+
+    widget_add_button_element(
+        widget, GuiButtonTypeRight, "OK", infrared_scene_contribute_widget_callback, infrared);
+
+    view_dispatcher_switch_to_view(infrared->view_dispatcher, InfraredViewWidget);
 }
 
 bool infrared_scene_contribute_on_event(void* context, SceneManagerEvent event) {
@@ -31,33 +43,34 @@ bool infrared_scene_contribute_on_event(void* context, SceneManagerEvent event) 
     bool consumed = false;
 
     if(event.type == SceneManagerEventTypeCustom) {
-        if(event.event == InfraredCustomEventTypePopupClosed) {
-            if(infrared->app_state.is_contributing_remote) {
-                infrared->app_state.edit_target = InfraredEditTargetMetadataBrand;
-                infrared->app_state.edit_mode = InfraredEditModeRename;
-                scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
-            }
+        if(event.event == GuiButtonTypeLeft) {
+            // Handle back button
+            FURI_LOG_I("IR_CONTRIB", "Back pressed, returning to edit menu");
+            infrared->app_state.is_contributing_remote = false;
+            consumed = scene_manager_previous_scene(infrared->scene_manager);
+        } else if(event.event == GuiButtonTypeRight) {
+            // Handle OK button
+            FURI_LOG_I(
+                "IR_CONTRIB",
+                "Starting contribution flow: is_contributing=%d",
+                infrared->app_state.is_contributing_remote);
+            infrared->app_state.edit_target = InfraredEditTargetMetadataBrand;
+            infrared->app_state.edit_mode = InfraredEditModeRename;
+            scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
             consumed = true;
         }
     } else if(event.type == SceneManagerEventTypeBack) {
-        popup_disable_timeout(infrared->popup);
-        popup_set_callback(infrared->popup, NULL);
-        infrared->app_state.is_contributing_remote = false;
-        popup_reset(infrared->popup);
-        scene_manager_previous_scene(infrared->scene_manager);
+        // Optionally consume back button
         consumed = true;
     }
-    
+
     return consumed;
 }
 
 void infrared_scene_contribute_on_exit(void* context) {
     InfraredApp* infrared = context;
-    popup_set_callback(infrared->popup, NULL);
-    popup_reset(infrared->popup);
-    
-    if(!infrared->app_state.is_contributing_remote) {
-        infrared->app_state.edit_target = InfraredEditTargetNone;
-        infrared->app_state.edit_mode = InfraredEditModeNone;
-    }
+    FURI_LOG_I("IR_CONTRIB", "Exiting contribute scene");
+
+    // Only reset the widget, keep the state
+    widget_reset(infrared->widget);
 }

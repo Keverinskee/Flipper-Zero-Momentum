@@ -39,6 +39,8 @@
 #include "views/infrared_debug_view.h"
 #include "views/infrared_move_view.h"
 
+#include <gui/modules/widget.h>
+
 #define INFRARED_FILE_NAME_SIZE  100
 #define INFRARED_TEXT_STORE_NUM  2
 #define INFRARED_TEXT_STORE_SIZE 128
@@ -91,13 +93,14 @@ typedef struct {
     bool is_debug_enabled; /**< Whether to enable or disable debugging features. */
     bool is_transmitting; /**< Whether a signal is currently being transmitted. */
     bool is_otg_enabled; /**< Whether OTG power (external 5V) is enabled. */
+    bool is_contributing_remote; /**< Whether we're in the contribute flow */
+    bool is_processing_contribute_exit; /**< Guard flag for contribute exit */
     InfraredEditTarget edit_target : 8; /**< Selected editing target (a remote or a button). */
     InfraredEditMode edit_mode     : 8; /**< Selected editing operation (rename or delete). */
     int32_t current_button_index; /**< Selected button index (move destination). */
     int32_t prev_button_index; /**< Previous button index (move source). */
     uint32_t last_transmit_time; /**< Lat time a signal was transmitted. */
     FuriHalInfraredTxPin tx_pin;
-    bool is_contributing_remote;
 } InfraredAppState;
 
 /**
@@ -139,6 +142,7 @@ struct InfraredApp {
     InfraredAppState app_state; /**< Application state. */
 
     void* rpc_ctx; /**< Pointer to the RPC context object. */
+    Widget* widget;
 };
 
 /**
@@ -155,6 +159,7 @@ typedef enum {
     InfraredViewDebugView,
     InfraredViewMove,
     InfraredViewLoading,
+    InfraredViewWidget,
 } InfraredView;
 
 /**

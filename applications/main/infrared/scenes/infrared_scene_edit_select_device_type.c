@@ -88,12 +88,23 @@ bool infrared_scene_edit_select_device_type_on_event(void* context, SceneManager
             // Clear contribution flag when done with the flow
             infrared->app_state.is_contributing_remote = false;
         }
-        
+
         scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
         consumed = true;
     } else if(event.type == SceneManagerEventTypeBack) {
-        scene_manager_previous_scene(infrared->scene_manager);
-        consumed = true;
+        if(infrared->app_state.is_contributing_remote) {
+            FURI_LOG_I(
+                "IR_CONTRIB", "Back pressed during device type selection, exiting to edit menu");
+            infrared->app_state.is_contributing_remote = false;
+            infrared->app_state.edit_target = InfraredEditTargetNone;
+            infrared->app_state.edit_mode = InfraredEditModeNone;
+            scene_manager_search_and_switch_to_previous_scene(
+                infrared->scene_manager, InfraredSceneEdit);
+            consumed = true;
+        } else {
+            scene_manager_previous_scene(infrared->scene_manager);
+            consumed = true;
+        }
     }
 
     return consumed;
@@ -101,5 +112,7 @@ bool infrared_scene_edit_select_device_type_on_event(void* context, SceneManager
 
 void infrared_scene_edit_select_device_type_on_exit(void* context) {
     InfraredApp* infrared = context;
+
+    // Reset submenu
     submenu_reset(infrared->submenu);
 }

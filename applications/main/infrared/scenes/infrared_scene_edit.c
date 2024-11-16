@@ -70,7 +70,6 @@ void infrared_scene_edit_on_enter(void* context) {
         infrared_scene_edit_submenu_callback,
         context);
 
-
     const uint32_t submenu_index = scene_manager_get_scene_state(scene_manager, InfraredSceneEdit);
     submenu_set_selected_item(submenu, submenu_index);
     scene_manager_set_scene_state(scene_manager, InfraredSceneEdit, SubmenuIndexAddButton);
