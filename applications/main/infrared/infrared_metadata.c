@@ -69,59 +69,47 @@ InfraredErrorCode infrared_metadata_save(InfraredMetadata* metadata, FlipperForm
 
     // Write brand if exists
     if(furi_string_size(metadata->brand) > 0) {
-        char comment[256];
-        snprintf(comment, sizeof(comment), "Brand: %s", furi_string_get_cstr(metadata->brand));
-        bool success = flipper_format_write_comment_cstr(ff, comment);
-        FURI_LOG_D(TAG, "Writing brand comment: '%s', result: %d", comment, success);
-        if(!success) return InfraredErrorCodeFileOperationFailed;
+        if(!flipper_format_write_string_cstr(
+               ff, "# Brand", furi_string_get_cstr(metadata->brand))) {
+            FURI_LOG_E(TAG, "Failed to write brand");
+            return InfraredErrorCodeFileOperationFailed;
+        }
     }
 
-    // Write device type if exists
+    // Write device type if exists 
     if(furi_string_size(metadata->device_type) > 0) {
-        char comment[256];
-        snprintf(
-            comment,
-            sizeof(comment),
-            "Device Type: %s",
-            furi_string_get_cstr(metadata->device_type));
-        bool success = flipper_format_write_comment_cstr(ff, comment);
-        FURI_LOG_D(TAG, "Writing device type comment: '%s', result: %d", comment, success);
-        if(!success) return InfraredErrorCodeFileOperationFailed;
+        if(!flipper_format_write_string_cstr(
+               ff, "# Device Type", furi_string_get_cstr(metadata->device_type))) {
+            FURI_LOG_E(TAG, "Failed to write device type");
+            return InfraredErrorCodeFileOperationFailed;
+        }
     }
 
     // Write model if exists
     if(furi_string_size(metadata->model) > 0) {
-        char comment[256];
-        snprintf(comment, sizeof(comment), "Model: %s", furi_string_get_cstr(metadata->model));
-        bool success = flipper_format_write_comment_cstr(ff, comment);
-        FURI_LOG_D(TAG, "Writing model comment: '%s', result: %d", comment, success);
-        if(!success) return InfraredErrorCodeFileOperationFailed;
+        if(!flipper_format_write_string_cstr(
+               ff, "# Model", furi_string_get_cstr(metadata->model))) {
+            FURI_LOG_E(TAG, "Failed to write model");
+            return InfraredErrorCodeFileOperationFailed;
+        }
     }
 
     // Write contributor if exists
     if(furi_string_size(metadata->contributor) > 0) {
-        char comment[256];
-        snprintf(
-            comment,
-            sizeof(comment),
-            "Contributor: %s",
-            furi_string_get_cstr(metadata->contributor));
-        bool success = flipper_format_write_comment_cstr(ff, comment);
-        FURI_LOG_D(TAG, "Writing contributor comment: '%s', result: %d", comment, success);
-        if(!success) return InfraredErrorCodeFileOperationFailed;
+        if(!flipper_format_write_string_cstr(
+               ff, "# Contributor", furi_string_get_cstr(metadata->contributor))) {
+            FURI_LOG_E(TAG, "Failed to write contributor");
+            return InfraredErrorCodeFileOperationFailed;
+        }
     }
 
     // Write remote model if exists
     if(furi_string_size(metadata->remote_model) > 0) {
-        char comment[256];
-        snprintf(
-            comment,
-            sizeof(comment),
-            "Remote Model: %s",
-            furi_string_get_cstr(metadata->remote_model));
-        bool success = flipper_format_write_comment_cstr(ff, comment);
-        FURI_LOG_D(TAG, "Writing remote model comment: '%s', result: %d", comment, success);
-        if(!success) return InfraredErrorCodeFileOperationFailed;
+        if(!flipper_format_write_string_cstr(
+               ff, "# Remote Model", furi_string_get_cstr(metadata->remote_model))) {
+            FURI_LOG_E(TAG, "Failed to write remote model");
+            return InfraredErrorCodeFileOperationFailed;
+        }
     }
 
     return error;

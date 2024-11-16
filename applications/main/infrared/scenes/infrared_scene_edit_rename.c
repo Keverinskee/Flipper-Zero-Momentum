@@ -60,22 +60,28 @@ void infrared_scene_edit_rename_on_enter(void* context) {
 bool infrared_scene_edit_rename_on_event(void* context, SceneManagerEvent event) {
     InfraredApp* infrared = context;
     bool consumed = false;
-    InfraredMetadata* metadata = infrared_remote_get_metadata(infrared->remote);
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == InfraredCustomEventTypeTextEditDone) {
+            InfraredRemote* remote = infrared->remote;
+            InfraredMetadata* metadata = infrared_remote_get_metadata(remote);
+
             switch(infrared->app_state.edit_target) {
             case InfraredEditTargetMetadataBrand:
                 infrared_metadata_set_brand(metadata, infrared->text_store[0]);
+                infrared_remote_save(remote);
                 break;
             case InfraredEditTargetMetadataModel:
                 infrared_metadata_set_model(metadata, infrared->text_store[0]);
+                infrared_remote_save(remote);
                 break;
             case InfraredEditTargetMetadataContributor:
                 infrared_metadata_set_contributor(metadata, infrared->text_store[0]);
+                infrared_remote_save(remote);
                 break;
             case InfraredEditTargetMetadataRemoteModel:
                 infrared_metadata_set_remote_model(metadata, infrared->text_store[0]);
+                infrared_remote_save(remote);
                 break;
             case InfraredEditTargetSignal:
                 infrared_remote_rename_signal(
@@ -83,10 +89,15 @@ bool infrared_scene_edit_rename_on_event(void* context, SceneManagerEvent event)
                     infrared->app_state.current_button_index,
                     infrared->text_store[0]);
                 break;
+            case InfraredEditTargetNone:
+            case InfraredEditTargetRemote:
+            case InfraredEditTargetButton:
+            case InfraredEditTargetMetadataDeviceType:
             default:
                 break;
             }
-            scene_manager_previous_scene(infrared->scene_manager);
+            // Show the saved popup
+            scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
             consumed = true;
         }
     }
