@@ -69,7 +69,11 @@ InfraredErrorCode infrared_metadata_save(InfraredMetadata* metadata, FlipperForm
     // Write device type if exists
     if(furi_string_size(metadata->device_type) > 0) {
         char comment[256];
-        snprintf(comment, sizeof(comment), "Device Type: %s", furi_string_get_cstr(metadata->device_type));
+        snprintf(
+            comment,
+            sizeof(comment),
+            "Device Type: %s",
+            furi_string_get_cstr(metadata->device_type));
         bool success = flipper_format_write_comment_cstr(ff, comment);
         FURI_LOG_D(TAG, "Writing device type comment: '%s', result: %d", comment, success);
         if(!success) return InfraredErrorCodeFileOperationFailed;
@@ -91,9 +95,9 @@ InfraredErrorCode infrared_metadata_read(InfraredMetadata* metadata, FlipperForm
     infrared_metadata_reset(metadata);
     InfraredErrorCode error = InfraredErrorCodeNone;
     FuriString* line = furi_string_alloc();
-    
+
     FURI_LOG_D(TAG, "Starting metadata read");
-    
+
     Stream* stream = flipper_format_get_raw_stream(ff);
     if(!stream) {
         FURI_LOG_E(TAG, "Failed to get stream");
@@ -103,7 +107,7 @@ InfraredErrorCode infrared_metadata_read(InfraredMetadata* metadata, FlipperForm
 
     // Store current position
     size_t pos = stream_tell(stream);
-    
+
     do {
         // Rewind and skip header
         if(!stream_rewind(stream)) {
@@ -128,7 +132,7 @@ InfraredErrorCode infrared_metadata_read(InfraredMetadata* metadata, FlipperForm
         while(!stream_eof(stream)) {
             if(!stream_read_line(stream, line)) break;
             const char* line_str = furi_string_get_cstr(line);
-            
+
             // Skip non-comment or empty comment lines
             if(strncmp(line_str, "# ", 2) != 0 || strlen(line_str) <= 2) continue;
 
