@@ -1,130 +1,94 @@
-#include "../infrared_app_i.h"
-
 #include <string.h>
 #include <toolbox/path.h>
+#include "../infrared_signal.h"
+#include "../infrared_remote.h"
+#include "../infrared_app_i.h"
+#include "../infrared_metadata.h"
 
-static int32_t infrared_scene_edit_rename_task_callback(void* context) {
-    InfraredApp* infrared = context;
-    InfraredAppState* app_state = &infrared->app_state;
-    const InfraredEditTarget edit_target = app_state->edit_target;
-
-    InfraredErrorCode error = InfraredErrorCodeNone;
-    InfraredMetadata* metadata = infrared_remote_get_metadata(infrared->remote);
-
-    if(edit_target == InfraredEditTargetButton) {
-        furi_assert(app_state->current_button_index != InfraredButtonIndexNone);
-        error = infrared_remote_rename_signal(
-            infrared->remote, app_state->current_button_index, infrared->text_store[0]);
-    } else if(edit_target == InfraredEditTargetRemote) {
-        error = infrared_rename_current_remote(infrared, infrared->text_store[0]);
-    } else if(edit_target == InfraredEditTargetMetadataBrand) {
-        infrared_metadata_set_brand(metadata, infrared->text_store[0]);
-        error = infrared_remote_save(infrared->remote);
-    } else if(edit_target == InfraredEditTargetMetadataDeviceType) {
-        infrared_metadata_set_device_type(metadata, infrared->text_store[0]);
-        error = infrared_remote_save(infrared->remote);
-    } else if(edit_target == InfraredEditTargetMetadataModel) {
-        infrared_metadata_set_model(metadata, infrared->text_store[0]);
-        error = infrared_remote_save(infrared->remote);
-    } else {
-        furi_crash();
-    }
-
-    view_dispatcher_send_custom_event(
-        infrared->view_dispatcher, InfraredCustomEventTypeTaskFinished);
-
-    return error;
-}
 void infrared_scene_edit_rename_on_enter(void* context) {
     InfraredApp* infrared = context;
     TextInput* text_input = infrared->text_input;
-    const InfraredEditTarget edit_target = infrared->app_state.edit_target;
+    FuriString* temp_str = furi_string_alloc();
     InfraredMetadata* metadata = infrared_remote_get_metadata(infrared->remote);
-    size_t enter_name_length = 0;
 
-    if(edit_target == InfraredEditTargetButton) {
-        text_input_set_header_text(text_input, "Name the button");
-        const int32_t current_button_index = infrared->app_state.current_button_index;
-        furi_check(current_button_index != InfraredButtonIndexNone);
-        enter_name_length = INFRARED_MAX_BUTTON_NAME_LENGTH;
-        strlcpy(
-            infrared->text_store[0],
-            infrared_remote_get_signal_name(infrared->remote, current_button_index),
-            enter_name_length);
-    } else if(edit_target == InfraredEditTargetRemote) {
-        text_input_set_header_text(text_input, "Name the remote");
-        enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
-        strlcpy(
-            infrared->text_store[0],
-            infrared_remote_get_name(infrared->remote),
-            enter_name_length);
-    } else if(edit_target == InfraredEditTargetMetadataBrand) {
-        text_input_set_header_text(text_input, "Enter brand name");
-        enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
-        strlcpy(infrared->text_store[0], infrared_metadata_get_brand(metadata), enter_name_length);
-    } else if(edit_target == InfraredEditTargetMetadataDeviceType) {
-        text_input_set_header_text(text_input, "Enter device type");
-        enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
-        strlcpy(
-            infrared->text_store[0],
-            infrared_metadata_get_device_type(metadata),
-            enter_name_length);
-    } else if(edit_target == InfraredEditTargetMetadataModel) {
-        text_input_set_header_text(text_input, "Enter model name");
-        enter_name_length = INFRARED_MAX_REMOTE_NAME_LENGTH;
-        strlcpy(infrared->text_store[0], infrared_metadata_get_model(metadata), enter_name_length);
+    // Set appropriate header text based on edit target
+    switch(infrared->app_state.edit_target) {
+    case InfraredEditTargetMetadataBrand:
+        text_input_set_header_text(text_input, "Enter Brand Name");
+        furi_string_set(temp_str, infrared_metadata_get_brand(metadata));
+        break;
+    case InfraredEditTargetMetadataModel:
+        text_input_set_header_text(text_input, "Enter Device Model");
+        furi_string_set(temp_str, infrared_metadata_get_model(metadata));
+        break;
+    case InfraredEditTargetMetadataContributor:
+        text_input_set_header_text(text_input, "Enter Contributor Name");
+        furi_string_set(temp_str, infrared_metadata_get_contributor(metadata));
+        break;
+    case InfraredEditTargetMetadataRemoteModel:
+        text_input_set_header_text(text_input, "Enter Remote Model");
+        furi_string_set(temp_str, infrared_metadata_get_remote_model(metadata));
+        break;
+    case InfraredEditTargetSignal:
+        text_input_set_header_text(text_input, "Name the Button");
+        furi_string_set(
+            temp_str,
+            infrared_remote_get_signal_name(
+                infrared->remote, infrared->app_state.current_button_index));
+        break;
+    default:
+        text_input_set_header_text(text_input, "Edit Name");
+        break;
     }
+
+    // Copy string to text store
+    strncpy(infrared->text_store[0], furi_string_get_cstr(temp_str), INFRARED_TEXT_STORE_SIZE);
 
     text_input_set_result_callback(
         text_input,
         infrared_text_input_callback,
-        context,
+        infrared,
         infrared->text_store[0],
-        enter_name_length,
-        false);
+        INFRARED_MAX_BUTTON_NAME_LENGTH,
+        true);
+
+    furi_string_free(temp_str);
 
     view_dispatcher_switch_to_view(infrared->view_dispatcher, InfraredViewTextInput);
 }
 
 bool infrared_scene_edit_rename_on_event(void* context, SceneManagerEvent event) {
     InfraredApp* infrared = context;
-    SceneManager* scene_manager = infrared->scene_manager;
     bool consumed = false;
+    InfraredMetadata* metadata = infrared_remote_get_metadata(infrared->remote);
 
     if(event.type == SceneManagerEventTypeCustom) {
         if(event.event == InfraredCustomEventTypeTextEditDone) {
-            // Original rename task code - removed device type check
-            infrared_blocking_task_start(infrared, infrared_scene_edit_rename_task_callback);
-        } else if(event.event == InfraredCustomEventTypeTaskFinished) {
-            const InfraredErrorCode task_error = infrared_blocking_task_finalize(infrared);
-            InfraredAppState* app_state = &infrared->app_state;
-
-            if(!INFRARED_ERROR_PRESENT(task_error)) {
-                scene_manager_next_scene(scene_manager, InfraredSceneEditRenameDone);
-            } else {
-                bool long_signal = INFRARED_ERROR_CHECK(
-                    task_error, InfraredErrorCodeSignalRawUnableToReadTooLongData);
-
-                const char* format = "Failed to rename\n%s";
-                const char* target = infrared->app_state.edit_target == InfraredEditTargetButton ?
-                                         "button" :
-                                         "file";
-                if(long_signal) {
-                    format = "Failed to rename\n\"%s\" is too long.\nTry to edit file from pc";
-                    target = infrared_remote_get_signal_name(
-                        infrared->remote, INFRARED_ERROR_GET_INDEX(task_error));
-                }
-
-                infrared_show_error_message(infrared, format, target);
-
-                const uint32_t possible_scenes[] = {InfraredSceneRemoteList, InfraredSceneRemote};
-                scene_manager_search_and_switch_to_previous_scene_one_of(
-                    scene_manager, possible_scenes, COUNT_OF(possible_scenes));
+            switch(infrared->app_state.edit_target) {
+            case InfraredEditTargetMetadataBrand:
+                infrared_metadata_set_brand(metadata, infrared->text_store[0]);
+                break;
+            case InfraredEditTargetMetadataModel:
+                infrared_metadata_set_model(metadata, infrared->text_store[0]);
+                break;
+            case InfraredEditTargetMetadataContributor:
+                infrared_metadata_set_contributor(metadata, infrared->text_store[0]);
+                break;
+            case InfraredEditTargetMetadataRemoteModel:
+                infrared_metadata_set_remote_model(metadata, infrared->text_store[0]);
+                break;
+            case InfraredEditTargetSignal:
+                infrared_remote_rename_signal(
+                    infrared->remote,
+                    infrared->app_state.current_button_index,
+                    infrared->text_store[0]);
+                break;
+            default:
+                break;
             }
-
-            app_state->current_button_index = InfraredButtonIndexNone;
+            scene_manager_previous_scene(infrared->scene_manager);
+            consumed = true;
         }
-        consumed = true;
     }
 
     return consumed;

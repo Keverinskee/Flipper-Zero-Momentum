@@ -90,3 +90,35 @@ void infrared_metadata_set_device_type(InfraredMetadata* metadata, const char* d
  * @param[in] model model string to set
  */
 void infrared_metadata_set_model(InfraredMetadata* metadata, const char* model);
+
+/**
+ * @brief Set the contributor in metadata
+ *
+ * @param[in,out] metadata pointer to the metadata instance
+ * @param[in] contributor contributor string to set
+ */
+void infrared_metadata_set_contributor(InfraredMetadata* metadata, const char* contributor);
+
+/**
+ * @brief Set the remote model in metadata
+ *
+ * @param[in,out] metadata pointer to the metadata instance
+ * @param[in] remote_model remote model string to set
+ */
+void infrared_metadata_set_remote_model(InfraredMetadata* metadata, const char* remote_model);
+
+/**
+ * @brief Get the contributor from metadata
+ *
+ * @param[in] metadata pointer to the metadata instance
+ * @returns pointer to contributor string
+ */
+const char* infrared_metadata_get_contributor(const InfraredMetadata* metadata);
+
+/**
+ * @brief Get the remote model from metadata
+ *
+ * @param[in] metadata pointer to the metadata instance
+ * @returns pointer to remote model string
+ */
+const char* infrared_metadata_get_remote_model(const InfraredMetadata* metadata);

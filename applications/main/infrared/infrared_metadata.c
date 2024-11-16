@@ -6,16 +6,20 @@
 #include <storage/storage.h>
 #include <flipper_format/flipper_format.h>
 #include <flipper_format/flipper_format_i.h>
-#define TAG                               "InfraredMetadata"
+#define TAG                                "InfraredMetadata"
 // Metadata keys
-#define INFRARED_METADATA_BRAND_KEY       "Brand"
-#define INFRARED_METADATA_DEVICE_TYPE_KEY "Device Type"
-#define INFRARED_METADATA_MODEL_KEY       "Model"
+#define INFRARED_METADATA_BRAND_KEY        "Brand"
+#define INFRARED_METADATA_DEVICE_TYPE_KEY  "Device Type"
+#define INFRARED_METADATA_MODEL_KEY        "Model"
+#define INFRARED_METADATA_CONTRIBUTOR_KEY  "Contributor"
+#define INFRARED_METADATA_REMOTE_MODEL_KEY "Remote Model"
 
 struct InfraredMetadata {
     FuriString* brand;
     FuriString* device_type;
     FuriString* model;
+    FuriString* contributor;
+    FuriString* remote_model;
 };
 
 InfraredMetadata* infrared_metadata_alloc() {
@@ -23,6 +27,8 @@ InfraredMetadata* infrared_metadata_alloc() {
     metadata->brand = furi_string_alloc();
     metadata->device_type = furi_string_alloc();
     metadata->model = furi_string_alloc();
+    metadata->contributor = furi_string_alloc();
+    metadata->remote_model = furi_string_alloc();
     return metadata;
 }
 
@@ -31,6 +37,8 @@ void infrared_metadata_free(InfraredMetadata* metadata) {
     furi_string_free(metadata->brand);
     furi_string_free(metadata->device_type);
     furi_string_free(metadata->model);
+    furi_string_free(metadata->contributor);
+    furi_string_free(metadata->remote_model);
     free(metadata);
 }
 
@@ -39,6 +47,8 @@ void infrared_metadata_reset(InfraredMetadata* metadata) {
     furi_string_reset(metadata->brand);
     furi_string_reset(metadata->device_type);
     furi_string_reset(metadata->model);
+    furi_string_reset(metadata->contributor);
+    furi_string_reset(metadata->remote_model);
 }
 
 InfraredErrorCode infrared_metadata_save(InfraredMetadata* metadata, FlipperFormat* ff) {
@@ -85,6 +95,32 @@ InfraredErrorCode infrared_metadata_save(InfraredMetadata* metadata, FlipperForm
         snprintf(comment, sizeof(comment), "Model: %s", furi_string_get_cstr(metadata->model));
         bool success = flipper_format_write_comment_cstr(ff, comment);
         FURI_LOG_D(TAG, "Writing model comment: '%s', result: %d", comment, success);
+        if(!success) return InfraredErrorCodeFileOperationFailed;
+    }
+
+    // Write contributor if exists
+    if(furi_string_size(metadata->contributor) > 0) {
+        char comment[256];
+        snprintf(
+            comment,
+            sizeof(comment),
+            "Contributor: %s",
+            furi_string_get_cstr(metadata->contributor));
+        bool success = flipper_format_write_comment_cstr(ff, comment);
+        FURI_LOG_D(TAG, "Writing contributor comment: '%s', result: %d", comment, success);
+        if(!success) return InfraredErrorCodeFileOperationFailed;
+    }
+
+    // Write remote model if exists
+    if(furi_string_size(metadata->remote_model) > 0) {
+        char comment[256];
+        snprintf(
+            comment,
+            sizeof(comment),
+            "Remote Model: %s",
+            furi_string_get_cstr(metadata->remote_model));
+        bool success = flipper_format_write_comment_cstr(ff, comment);
+        FURI_LOG_D(TAG, "Writing remote model comment: '%s', result: %d", comment, success);
         if(!success) return InfraredErrorCodeFileOperationFailed;
     }
 
@@ -153,6 +189,12 @@ InfraredErrorCode infrared_metadata_read(InfraredMetadata* metadata, FlipperForm
             } else if(strncmp(content, "Model", key_len) == 0) {
                 furi_string_set(metadata->model, value);
                 FURI_LOG_D(TAG, "Found model: '%s'", value);
+            } else if(strncmp(content, "Contributor", key_len) == 0) {
+                furi_string_set(metadata->contributor, value);
+                FURI_LOG_D(TAG, "Found contributor: '%s'", value);
+            } else if(strncmp(content, "Remote Model", key_len) == 0) {
+                furi_string_set(metadata->remote_model, value);
+                FURI_LOG_D(TAG, "Found remote model: '%s'", value);
             }
         }
 
@@ -189,4 +231,20 @@ void infrared_metadata_set_device_type(InfraredMetadata* metadata, const char* d
 
 void infrared_metadata_set_model(InfraredMetadata* metadata, const char* model) {
     furi_string_set(metadata->model, model);
+}
+
+const char* infrared_metadata_get_contributor(const InfraredMetadata* metadata) {
+    return furi_string_get_cstr(metadata->contributor);
+}
+
+const char* infrared_metadata_get_remote_model(const InfraredMetadata* metadata) {
+    return furi_string_get_cstr(metadata->remote_model);
+}
+
+void infrared_metadata_set_contributor(InfraredMetadata* metadata, const char* contributor) {
+    furi_string_set(metadata->contributor, contributor);
+}
+
+void infrared_metadata_set_remote_model(InfraredMetadata* metadata, const char* remote_model) {
+    furi_string_set(metadata->remote_model, remote_model);
 }

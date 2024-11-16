@@ -4,6 +4,8 @@ typedef enum {
     SubmenuIndexEditMetadataBrand,
     SubmenuIndexEditMetadataDeviceType,
     SubmenuIndexEditMetadataModel,
+    SubmenuIndexEditMetadataContributor,
+    SubmenuIndexEditMetadataRemoteModel,
 } SubmenuIndexMetadata;
 
 static void infrared_scene_edit_metadata_submenu_callback(void* context, uint32_t index) {
@@ -33,6 +35,18 @@ void infrared_scene_edit_metadata_on_enter(void* context) {
         SubmenuIndexEditMetadataModel,
         infrared_scene_edit_metadata_submenu_callback,
         infrared);
+    submenu_add_item(
+        submenu,
+        "Edit Contributor",
+        SubmenuIndexEditMetadataContributor,
+        infrared_scene_edit_metadata_submenu_callback,
+        infrared);
+    submenu_add_item(
+        submenu,
+        "Edit Remote Model",
+        SubmenuIndexEditMetadataRemoteModel,
+        infrared_scene_edit_metadata_submenu_callback,
+        infrared);
 
     submenu_set_selected_item(
         submenu,
@@ -56,6 +70,16 @@ bool infrared_scene_edit_metadata_on_event(void* context, SceneManagerEvent even
             consumed = true;
         } else if(event.event == SubmenuIndexEditMetadataModel) {
             infrared->app_state.edit_target = InfraredEditTargetMetadataModel;
+            infrared->app_state.edit_mode = InfraredEditModeRename;
+            scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
+            consumed = true;
+        } else if(event.event == SubmenuIndexEditMetadataContributor) {
+            infrared->app_state.edit_target = InfraredEditTargetMetadataContributor;
+            infrared->app_state.edit_mode = InfraredEditModeRename;
+            scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
+            consumed = true;
+        } else if(event.event == SubmenuIndexEditMetadataRemoteModel) {
+            infrared->app_state.edit_target = InfraredEditTargetMetadataRemoteModel;
             infrared->app_state.edit_mode = InfraredEditModeRename;
             scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRename);
             consumed = true;
