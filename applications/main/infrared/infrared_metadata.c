@@ -2,11 +2,15 @@
 #include "infrared_metadata.h"
 #include <toolbox/path.h>
 #include <furi_hal_resources.h>
+#include <toolbox/stream/stream.h>
+#include <storage/storage.h>
+#include <flipper_format/flipper_format.h>
+#include <flipper_format/flipper_format_i.h>
 #define TAG                               "InfraredMetadata"
 // Metadata keys
-#define INFRARED_METADATA_BRAND_KEY       "brand"
-#define INFRARED_METADATA_DEVICE_TYPE_KEY "device_type"
-#define INFRARED_METADATA_MODEL_KEY       "model"
+#define INFRARED_METADATA_BRAND_KEY       "Brand"
+#define INFRARED_METADATA_DEVICE_TYPE_KEY "Device Type"
+#define INFRARED_METADATA_MODEL_KEY       "Model"
 
 struct InfraredMetadata {
     FuriString* brand;
@@ -55,61 +59,108 @@ InfraredErrorCode infrared_metadata_save(InfraredMetadata* metadata, FlipperForm
 
     // Write brand if exists
     if(furi_string_size(metadata->brand) > 0) {
-        bool success =
-            flipper_format_write_string_cstr(ff, "# Brand", furi_string_get_cstr(metadata->brand));
-        FURI_LOG_D(TAG, "Writing brand result: %d", success);
+        char comment[256];
+        snprintf(comment, sizeof(comment), "Brand: %s", furi_string_get_cstr(metadata->brand));
+        bool success = flipper_format_write_comment_cstr(ff, comment);
+        FURI_LOG_D(TAG, "Writing brand comment: '%s', result: %d", comment, success);
         if(!success) return InfraredErrorCodeFileOperationFailed;
     }
 
     // Write device type if exists
     if(furi_string_size(metadata->device_type) > 0) {
-        bool success = flipper_format_write_string_cstr(
-            ff, "# Device Type", furi_string_get_cstr(metadata->device_type));
-        FURI_LOG_D(TAG, "Writing device type result: %d", success);
+        char comment[256];
+        snprintf(comment, sizeof(comment), "Device Type: %s", furi_string_get_cstr(metadata->device_type));
+        bool success = flipper_format_write_comment_cstr(ff, comment);
+        FURI_LOG_D(TAG, "Writing device type comment: '%s', result: %d", comment, success);
         if(!success) return InfraredErrorCodeFileOperationFailed;
     }
 
     // Write model if exists
     if(furi_string_size(metadata->model) > 0) {
-        bool success =
-            flipper_format_write_string_cstr(ff, "# Model", furi_string_get_cstr(metadata->model));
-        FURI_LOG_D(TAG, "Writing model result: %d", success);
+        char comment[256];
+        snprintf(comment, sizeof(comment), "Model: %s", furi_string_get_cstr(metadata->model));
+        bool success = flipper_format_write_comment_cstr(ff, comment);
+        FURI_LOG_D(TAG, "Writing model comment: '%s', result: %d", comment, success);
         if(!success) return InfraredErrorCodeFileOperationFailed;
     }
 
     return error;
 }
+
 InfraredErrorCode infrared_metadata_read(InfraredMetadata* metadata, FlipperFormat* ff) {
     infrared_metadata_reset(metadata);
     InfraredErrorCode error = InfraredErrorCodeNone;
-
-    bool brand_read = flipper_format_read_string(ff, "# Brand", metadata->brand);
-    bool type_read = flipper_format_read_string(ff, "# Device Type", metadata->device_type);
-    bool model_read = flipper_format_read_string(ff, "# Model", metadata->model);
-
-    FURI_LOG_D(
-        TAG,
-        "Metadata read results - Brand: %d, Type: %d, Model: %d",
-        brand_read,
-        type_read,
-        model_read);
-
-    // Process the ": " prefix if present for each field
-    if(furi_string_size(metadata->brand) > 2 &&
-       strncmp(furi_string_get_cstr(metadata->brand), ": ", 2) == 0) {
-        furi_string_right(metadata->brand, 2);
+    FuriString* line = furi_string_alloc();
+    
+    FURI_LOG_D(TAG, "Starting metadata read");
+    
+    Stream* stream = flipper_format_get_raw_stream(ff);
+    if(!stream) {
+        FURI_LOG_E(TAG, "Failed to get stream");
+        furi_string_free(line);
+        return InfraredErrorCodeFileOperationFailed;
     }
 
-    if(furi_string_size(metadata->device_type) > 2 &&
-       strncmp(furi_string_get_cstr(metadata->device_type), ": ", 2) == 0) {
-        furi_string_right(metadata->device_type, 2);
+    // Store current position
+    size_t pos = stream_tell(stream);
+    
+    do {
+        // Rewind and skip header
+        if(!stream_rewind(stream)) {
+            FURI_LOG_E(TAG, "Failed to rewind stream");
+            error = InfraredErrorCodeFileOperationFailed;
+            break;
+        }
+
+        // Skip header (first two lines)
+        for(int i = 0; i < 2; i++) {
+            if(!stream_read_line(stream, line)) {
+                FURI_LOG_E(TAG, "Failed to skip header line %d", i + 1);
+                error = InfraredErrorCodeFileOperationFailed;
+                break;
+            }
+        }
+        if(error != InfraredErrorCodeNone) break;
+
+        FURI_LOG_D(TAG, "Reading metadata comments");
+
+        // Read lines until we find a non-comment
+        while(!stream_eof(stream)) {
+            if(!stream_read_line(stream, line)) break;
+            const char* line_str = furi_string_get_cstr(line);
+            
+            // Skip non-comment or empty comment lines
+            if(strncmp(line_str, "# ", 2) != 0 || strlen(line_str) <= 2) continue;
+
+            // Parse "# Key: Value" format
+            const char* content = line_str + 2;
+            char* sep = strstr(content, ": ");
+            if(!sep) continue;
+
+            size_t key_len = sep - content;
+            char* value = sep + 2;
+
+            if(strncmp(content, "Brand", key_len) == 0) {
+                furi_string_set(metadata->brand, value);
+                FURI_LOG_D(TAG, "Found brand: '%s'", value);
+            } else if(strncmp(content, "Device Type", key_len) == 0) {
+                furi_string_set(metadata->device_type, value);
+                FURI_LOG_D(TAG, "Found device type: '%s'", value);
+            } else if(strncmp(content, "Model", key_len) == 0) {
+                furi_string_set(metadata->model, value);
+                FURI_LOG_D(TAG, "Found model: '%s'", value);
+            }
+        }
+
+    } while(false);
+
+    // Always try to restore position
+    if(!stream_seek(stream, pos, StreamOffsetFromStart)) {
+        FURI_LOG_E(TAG, "Failed to restore stream position");
+        error = InfraredErrorCodeFileOperationFailed;
     }
 
-    if(furi_string_size(metadata->model) > 2 &&
-       strncmp(furi_string_get_cstr(metadata->model), ": ", 2) == 0) {
-        furi_string_right(metadata->model, 2);
-    }
-
+    furi_string_free(line);
     return error;
 }
 const char* infrared_metadata_get_brand(const InfraredMetadata* metadata) {
