@@ -76,7 +76,7 @@ InfraredErrorCode infrared_metadata_save(InfraredMetadata* metadata, FlipperForm
         }
     }
 
-    // Write device type if exists 
+    // Write device type if exists
     if(furi_string_size(metadata->device_type) > 0) {
         if(!flipper_format_write_string_cstr(
                ff, "# Device Type", furi_string_get_cstr(metadata->device_type))) {

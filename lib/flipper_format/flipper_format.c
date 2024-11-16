@@ -404,7 +404,8 @@ bool flipper_format_write_comment_cstr(FlipperFormat* flipper_format, const char
     return flipper_format_stream_write_comment_cstr(flipper_format->stream, data);
 }
 
-static bool flipper_format_stream_read_comment_line(Stream* stream, const char* key, FuriString* data) {
+static bool
+    flipper_format_stream_read_comment_line(Stream* stream, const char* key, FuriString* data) {
     const size_t pos = stream_tell(stream);
     if(!stream_rewind(stream)) return false;
 
@@ -416,7 +417,7 @@ static bool flipper_format_stream_read_comment_line(Stream* stream, const char* 
         // Read a complete line
         furi_string_reset(line);
         char c;
-        
+
         while(stream_read(stream, (uint8_t*)&c, 1) == 1) {
             if(c == flipper_format_eolr) continue;
             if(c == flipper_format_eoln) break;
@@ -433,7 +434,8 @@ static bool flipper_format_stream_read_comment_line(Stream* stream, const char* 
 
                 if(furi_string_equal_str(found_key, key)) {
                     // Extract value (skip ": ")
-                    furi_string_set_n(data, line, key_end + 2, furi_string_size(line) - (key_end + 2));
+                    furi_string_set_n(
+                        data, line, key_end + 2, furi_string_size(line) - (key_end + 2));
                     found = true;
                 }
                 furi_string_free(found_key);
