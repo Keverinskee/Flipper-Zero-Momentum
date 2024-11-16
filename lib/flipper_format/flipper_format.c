@@ -405,6 +405,10 @@ bool flipper_format_write_comment_cstr(FlipperFormat* flipper_format, const char
 
 static bool
     flipper_format_stream_read_comment_line(Stream* stream, const char* key, FuriString* data) {
+    furi_check(stream);
+    furi_check(key);
+    furi_check(data);
+
     const size_t pos = stream_tell(stream);
     if(!stream_rewind(stream)) return false;
 
@@ -416,7 +420,6 @@ static bool
         // Read a complete line
         furi_string_reset(line);
         char c;
-
         while(stream_read(stream, (uint8_t*)&c, 1) == 1) {
             if(c == flipper_format_eolr) continue;
             if(c == flipper_format_eoln) break;

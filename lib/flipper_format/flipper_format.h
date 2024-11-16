@@ -518,26 +518,29 @@ bool flipper_format_write_comment(FlipperFormat* flipper_format, FuriString* dat
  */
 bool flipper_format_write_comment_cstr(FlipperFormat* flipper_format, const char* data);
 
-/** Read line starting with # and store text after "# "
- *
+/**
+ * Read metadata comment value for given key.
+ * Only reads lines starting with "# " and following the format "# Key: Value"
+ * 
  * @param      flipper_format  Pointer to a FlipperFormat instance
  * @param      key            Key to look for after "# " (e.g "Brand" for "# Brand: something")
  * @param      data           FuriString to store value in (will contain "something" in example)
  *
- * @return     True on success
+ * @return     True on success (key found and value read), false otherwise
  */
 bool flipper_format_read_comment(FlipperFormat* flipper_format, const char* key, FuriString* data);
 
-/** Read line starting with # and store text after "# ". Plain C string version.
+/**
+ * Read metadata comment value for given key. Plain C string version.
+ * Only reads lines starting with "# " and following the format "# Key: Value"
  *
- * @param      flipper_format  Pointer to a FlipperFormat instance
- * @param      key            Key to look for after "# " (e.g "Brand" for "# Brand: something") 
- * @param      data           String to store value in (will contain "something" in example)
- *
- * @return     True on success
+ * @param      flipper_format  Pointer to a FlipperFormat instance  
+ * @param      key            Key to look for after "# " (e.g "Brand" for "# Brand: something")
+ * @param      data           String buffer to store value in (will contain "something" in example)
+ * 
+ * @return     True on success (key found and value read), false otherwise
  */
 bool flipper_format_read_comment_cstr(FlipperFormat* flipper_format, const char* key, char* data);
-
 /** Removes the first matching key and its value. Sets the RW pointer to a
  * position of deleted data.
  *

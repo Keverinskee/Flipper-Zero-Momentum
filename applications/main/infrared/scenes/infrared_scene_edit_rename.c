@@ -33,7 +33,6 @@ void infrared_scene_edit_rename_on_enter(void* context) {
     FuriString* temp_str = furi_string_alloc();
     size_t enter_name_length = 0;
 
-    // Handle all edit targets
     switch(infrared->app_state.edit_target) {
     case InfraredEditTargetButton:
         text_input_set_header_text(text_input, "Name the button");
@@ -81,18 +80,18 @@ void infrared_scene_edit_rename_on_enter(void* context) {
         break;
     case InfraredEditTargetSignal:
         text_input_set_header_text(text_input, "Name the Button");
-        furi_string_set(
-            temp_str,
+        furi_check(infrared->app_state.current_button_index != InfraredButtonIndexNone);
+        enter_name_length = INFRARED_MAX_BUTTON_NAME_LENGTH;
+        strlcpy(
+            infrared->text_store[0],
             infrared_remote_get_signal_name(
-                infrared->remote, infrared->app_state.current_button_index));
+                infrared->remote, infrared->app_state.current_button_index),
+            enter_name_length);
         break;
     default:
         text_input_set_header_text(text_input, "Edit Name");
         break;
     }
-
-    // Copy string to text store
-    strncpy(infrared->text_store[0], furi_string_get_cstr(temp_str), INFRARED_TEXT_STORE_SIZE);
 
     // Add file validation for remote renaming
     if(infrared->app_state.edit_target == InfraredEditTargetRemote) {
