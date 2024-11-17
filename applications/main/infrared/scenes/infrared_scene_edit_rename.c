@@ -227,6 +227,36 @@ bool infrared_scene_edit_rename_on_event(void* context, SceneManagerEvent event)
                 infrared_blocking_task_start(infrared, infrared_scene_edit_rename_task_callback);
                 consumed = true;
             }
+        } else if(event.event == InfraredCustomEventTypeTaskFinished) {
+            // Added back error handling for rename tasks
+            const InfraredErrorCode task_error = infrared_blocking_task_finalize(infrared);
+            InfraredAppState* app_state = &infrared->app_state;
+
+            if(!INFRARED_ERROR_PRESENT(task_error)) {
+                scene_manager_next_scene(infrared->scene_manager, InfraredSceneEditRenameDone);
+            } else {
+                bool long_signal = INFRARED_ERROR_CHECK(
+                    task_error, InfraredErrorCodeSignalRawUnableToReadTooLongData);
+
+                const char* format = "Failed to rename\n%s";
+                const char* target = infrared->app_state.edit_target == InfraredEditTargetButton ?
+                                         "button" :
+                                         "file";
+                if(long_signal) {
+                    format = "Failed to rename\n\"%s\" is too long.\nTry to edit file from pc";
+                    target = infrared_remote_get_signal_name(
+                        infrared->remote, INFRARED_ERROR_GET_INDEX(task_error));
+                }
+
+                infrared_show_error_message(infrared, format, target);
+
+                const uint32_t possible_scenes[] = {InfraredSceneRemoteList, InfraredSceneRemote};
+                scene_manager_search_and_switch_to_previous_scene_one_of(
+                    infrared->scene_manager, possible_scenes, COUNT_OF(possible_scenes));
+            }
+
+            app_state->current_button_index = InfraredButtonIndexNone;
+            consumed = true;
         }
     }
     return consumed;

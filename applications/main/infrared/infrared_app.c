@@ -222,20 +222,32 @@ static InfraredApp* infrared_alloc(void) {
 static void infrared_free(InfraredApp* infrared) {
     furi_assert(infrared);
 
+    furi_thread_join(infrared->task_thread);
+    furi_thread_free(infrared->task_thread);
+
+    ViewDispatcher* view_dispatcher = infrared->view_dispatcher;
+    InfraredAppState* app_state = &infrared->app_state;
+
+    if(infrared->rpc_ctx) {
+        rpc_system_app_set_callback(infrared->rpc_ctx, NULL, NULL);
+        rpc_system_app_send_exited(infrared->rpc_ctx);
+        infrared->rpc_ctx = NULL;
+    }
+
     // First remove all views from dispatcher
-    if(infrared->view_dispatcher) {
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewSubmenu);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewTextInput);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewDialogEx);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewButtonMenu);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewPopup);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewVariableList);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewStack);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewMove);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewLoading);
-        view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewWidget);
-        if(infrared->app_state.is_debug_enabled) {
-            view_dispatcher_remove_view(infrared->view_dispatcher, InfraredViewDebugView);
+    if(view_dispatcher) {
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewSubmenu);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewTextInput);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewDialogEx);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewButtonMenu);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewPopup);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewVariableList);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewStack);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewMove);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewLoading);
+        view_dispatcher_remove_view(view_dispatcher, InfraredViewWidget);
+        if(app_state->is_debug_enabled) {
+            view_dispatcher_remove_view(view_dispatcher, InfraredViewDebugView);
         }
     }
 
@@ -250,26 +262,15 @@ static void infrared_free(InfraredApp* infrared) {
     infrared_move_view_free(infrared->move_view);
     loading_free(infrared->loading);
     widget_free(infrared->widget);
-    if(infrared->app_state.is_debug_enabled) {
+    if(app_state->is_debug_enabled) {
         infrared_debug_view_free(infrared->debug_view);
     }
 
     // Free dispatcher
-    view_dispatcher_free(infrared->view_dispatcher);
+    view_dispatcher_free(view_dispatcher);
 
     // Free scene manager
     scene_manager_free(infrared->scene_manager);
-
-    // Free thread
-    furi_thread_join(infrared->task_thread);
-    furi_thread_free(infrared->task_thread);
-
-    // Handle RPC cleanup
-    if(infrared->rpc_ctx) {
-        rpc_system_app_set_callback(infrared->rpc_ctx, NULL, NULL);
-        rpc_system_app_send_exited(infrared->rpc_ctx);
-        infrared->rpc_ctx = NULL;
-    }
 
     // Free remaining views
     button_panel_free(infrared->button_panel);
@@ -297,6 +298,7 @@ static void infrared_free(InfraredApp* infrared) {
 
     free(infrared);
 }
+
 InfraredErrorCode infrared_add_remote_with_button(
     const InfraredApp* infrared,
     const char* button_name,
