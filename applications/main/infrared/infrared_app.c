@@ -257,6 +257,9 @@ static void infrared_free(InfraredApp* infrared) {
     // Free dispatcher
     view_dispatcher_free(infrared->view_dispatcher);
 
+    // Free scene manager
+    scene_manager_free(infrared->scene_manager);
+
     // Free thread
     furi_thread_join(infrared->task_thread);
     furi_thread_free(infrared->task_thread);
@@ -272,32 +275,28 @@ static void infrared_free(InfraredApp* infrared) {
     button_panel_free(infrared->button_panel);
     infrared_progress_view_free(infrared->progress);
 
-    // Close system records
+    // Free IR components
+    infrared_worker_free(infrared->worker);
+    infrared_remote_free(infrared->remote);
+    infrared_signal_free(infrared->current_signal);
+    infrared_brute_force_free(infrared->brute_force);
+
+    // Close system records with NULL assignments
     furi_record_close(RECORD_NOTIFICATION);
+    infrared->notifications = NULL;
     furi_record_close(RECORD_DIALOGS);
+    infrared->dialogs = NULL;
     furi_record_close(RECORD_GUI);
+    infrared->gui = NULL;
+    furi_record_close(RECORD_STORAGE);
+    infrared->storage = NULL;
 
     // Free strings
     furi_string_free(infrared->file_path);
     furi_string_free(infrared->button_name);
 
-    // Reset metadata and app state
-    if(infrared->remote) {
-        InfraredMetadata* metadata = infrared_remote_get_metadata(infrared->remote);
-        if(metadata) {
-            infrared_metadata_reset(metadata);
-        }
-    }
-
-    // Reset app state
-    infrared->app_state.is_contributing_remote = false;
-    infrared->app_state.edit_target = InfraredEditTargetNone;
-    infrared->app_state.edit_mode = InfraredEditModeNone;
-    infrared->app_state.current_button_index = InfraredButtonIndexNone;
-
     free(infrared);
 }
-
 InfraredErrorCode infrared_add_remote_with_button(
     const InfraredApp* infrared,
     const char* button_name,
