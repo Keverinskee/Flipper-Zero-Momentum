@@ -110,9 +110,10 @@ static FuriString *ventra_parse_xact(const MfUltralightData *data, uint8_t blk, 
     // Type 0 = Purchase, 1 = Train ride, 2 = Bus ride
     // TODO: Check PACE and see if it uses a different line code
     char linemap[3] = "PTB";
+    char *xact_fmt = (line==2)?"%c %5d %04d-%02d-%02d %02d:%02d":"%c %04X %04d-%02d-%02d %02d:%02d";
     // I like a nice concise display showing all the relevant infos without having to scroll...
     // Line   StopID   DateTime
-    furi_string_printf(ventra_xact_str, "%c %5d %04d-%02d-%02d %02d:%02d",
+    furi_string_printf(ventra_xact_str, xact_fmt,
         (line<3)?linemap[line]:'?',
         locus,
         dt.year, dt.month, dt.day,
@@ -216,7 +217,7 @@ static bool ventra_parse(const NfcDevice* device, FuriString* parsed_data) {
         }
         if (isExpired()) {
             card_state = 4;
-            //rides_left = 0;
+            rides_left = 0;
         }
         
         furi_string_printf(
