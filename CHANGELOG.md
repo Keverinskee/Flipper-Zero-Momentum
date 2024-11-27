@@ -18,6 +18,7 @@
   - UL: Fixed apps for firmware USB CDC callback changes (by @xMasterX)
 
 ### Fixed:
+- Desktop: Fixed Wardriving animation design (by @Davim09)
 - OFW: GPIO: Merged gsurkov/vcp_break_support branch for usb uart bridge (WIP!!!)
 
 ### Removed:
