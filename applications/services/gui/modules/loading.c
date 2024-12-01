@@ -30,7 +30,7 @@ static void loading_draw_callback(Canvas* canvas, void* _model) {
 
     canvas_draw_icon(canvas, x, y, &A_Loading_24);
 
-    canvas_draw_icon_animation(canvas, x, y, model->icon);
+    canvas_draw_icon_animation(canvas, x, y, 100, 100, model->icon);
 }
 
 static bool loading_input_callback(InputEvent* event, void* context) {

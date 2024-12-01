@@ -26,7 +26,7 @@ static void lfrfid_view_read_draw_callback(Canvas* canvas, void* _model) {
 
         canvas_draw_str(canvas, 77, 29, "ASK");
         canvas_draw_icon(canvas, 70, 22, &I_ButtonRight_4x7);
-        canvas_draw_icon_animation(canvas, 102, 21, model->icon);
+        canvas_draw_icon_animation(canvas, 102, 21, 100, 100, model->icon);
 
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 77, 43, "PSK");
@@ -35,7 +35,7 @@ static void lfrfid_view_read_draw_callback(Canvas* canvas, void* _model) {
 
         canvas_draw_str(canvas, 77, 43, "PSK");
         canvas_draw_icon(canvas, 70, 36, &I_ButtonRight_4x7);
-        canvas_draw_icon_animation(canvas, 102, 35, model->icon);
+        canvas_draw_icon_animation(canvas, 102, 35, 100, 100, model->icon);
 
         canvas_set_font(canvas, FontSecondary);
         canvas_draw_str(canvas, 77, 29, "ASK");
@@ -47,7 +47,7 @@ static void lfrfid_view_read_draw_callback(Canvas* canvas, void* _model) {
         } else {
             canvas_draw_str(canvas, 77, 35, "PSK");
         }
-        canvas_draw_icon_animation(canvas, 102, 27, model->icon);
+        canvas_draw_icon_animation(canvas, 102, 27, 100, 100, model->icon);
     }
 
     canvas_set_font(canvas, FontSecondary);

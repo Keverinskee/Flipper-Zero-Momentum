@@ -29,8 +29,10 @@ typedef enum {
     MenuStyleC64,
     MenuStyleCompact,
     MenuStyleMNTM,
+    MenuStyleCoverFlow,
     MenuStyleCount,
 } MenuStyle;
+
 
 typedef enum {
     SpiDefault, // CS on pa4

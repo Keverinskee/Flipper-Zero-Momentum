@@ -73,11 +73,15 @@ static void menu_centered_icon(
     size_t x,
     size_t y,
     size_t width,
-    size_t height) {
+    size_t height,
+    size_t width_scale,
+    size_t height_scale) {
     canvas_draw_icon_animation(
         canvas,
         x + (width - item->icon->icon->width) / 2,
         y + (height - item->icon->icon->height) / 2,
+        width_scale,
+        height_scale,
         item->icon);
 }
 
@@ -107,7 +111,7 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
                 canvas_set_font(canvas, i == 1 ? FontPrimary : FontSecondary);
                 shift_position = (position + items_count + i - 1) % items_count;
                 item = MenuItemArray_get(model->items, shift_position);
-                menu_centered_icon(canvas, item, 4, 3 + 22 * i, 14, 14);
+                menu_centered_icon(canvas, item, 4, 3 + 22 * i, 14, 14, 100, 100);
                 menu_get_name(item, name, false);
                 size_t scroll_counter = menu_scroll_counter(model, i == 1);
                 elements_scrollable_text_line(
@@ -142,7 +146,7 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
                     canvas_set_color(canvas, ColorWhite);
                 }
                 item = MenuItemArray_get(model->items, item_i);
-                menu_centered_icon(canvas, item, x_off, y_off, 40, 20);
+                menu_centered_icon(canvas, item, x_off, y_off, 40, 20, 100, 100);
                 menu_get_name(item, name, true);
                 size_t scroll_counter = menu_scroll_counter(model, selected);
                 elements_scrollable_text_line_centered(
@@ -202,7 +206,7 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
                     elements_slightly_rounded_frame(
                         canvas, pos_x - width / 2, pos_y - height / 2, width, height);
                 }
-                menu_centered_icon(canvas, item, pos_x - 7, pos_y - 7, 14, 14);
+                menu_centered_icon(canvas, item, pos_x - 7, pos_y - 7, 14, 14, 100, 100);
             }
             elements_scrollbar_horizontal(canvas, 0, 64, 128, position, items_count);
             break;
@@ -250,7 +254,7 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
                     pos_x += (width + 1) * i + (i < 0 ? -6 : 6);
                 }
                 canvas_draw_frame(canvas, pos_x - width / 2, pos_y - height / 2, width, height);
-                menu_centered_icon(canvas, item, pos_x - 7, pos_y - 7, 14, 14);
+                menu_centered_icon(canvas, item, pos_x - 7, pos_y - 7, 14, 14, 100, 100);
             }
             elements_scrollbar_horizontal(canvas, 0, 64, 128, position, items_count);
             break;
@@ -279,7 +283,7 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
                     canvas_set_color(canvas, ColorWhite);
                 }
                 item = MenuItemArray_get(model->items, item_i);
-                menu_centered_icon(canvas, item, 0, y_off, 16, 16);
+                menu_centered_icon(canvas, item, 0, y_off, 16, 16, 100, 100);
                 menu_get_name(item, name, true);
                 size_t scroll_counter = menu_scroll_counter(model, selected);
                 elements_scrollable_text_line(
@@ -422,7 +426,7 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
             MenuItem* item = MenuItemArray_get(model->items, position);
             menu_get_name(item, name, true);
             elements_bold_rounded_frame(canvas, 42, 23, 35, 33);
-            menu_centered_icon(canvas, item, 43, 24, 35, 32);
+            menu_centered_icon(canvas, item, 43, 24, 35, 32, 100, 100);
             canvas_draw_frame(canvas, 0, 0, 128, 64);
 
             uint8_t startY = 15;
@@ -440,6 +444,126 @@ static void menu_draw_callback(Canvas* canvas, void* _model) {
                 size_t scroll_counter = menu_scroll_counter(model, i == position);
                 elements_scrollable_text_line(canvas, 83, yPos, 43, name, scroll_counter, false);
             }
+            break;
+        }
+        case MenuStyleCoverFlow: {
+            canvas_clear(canvas);
+            canvas_set_font(canvas, FontPrimary);
+
+            // Draw frames
+            canvas_set_bitmap_mode(canvas, true);
+            canvas_draw_frame(canvas, 0, 0, 128, 64);
+            canvas_draw_frame(canvas, 44, 2, 40, 40);
+
+            // Draw left side albums
+            canvas_draw_line(canvas, 6, 40, 17, 35);
+            canvas_draw_line(canvas, 19, 40, 30, 35);
+            canvas_draw_line(canvas, 32, 40, 43, 35);
+            canvas_draw_line(canvas, 6, 3, 17, 8);
+            canvas_draw_line(canvas, 19, 3, 30, 8);
+            canvas_draw_line(canvas, 32, 3, 43, 8);
+            canvas_draw_line(canvas, 18, 2, 18, 41);
+            canvas_draw_line(canvas, 31, 2, 31, 41);
+            canvas_draw_line(canvas, 5, 2, 5, 41);
+            canvas_draw_line(canvas, 4, 8, 1, 7);
+            canvas_draw_line(canvas, 5, 35, 1, 36);
+
+            // Draw right side albums
+            canvas_draw_line(canvas, 95, 40, 84, 35);
+            canvas_draw_line(canvas, 108, 40, 97, 35);
+            canvas_draw_line(canvas, 121, 40, 110, 35);
+            canvas_draw_line(canvas, 84, 8, 95, 3);
+            canvas_draw_line(canvas, 97, 8, 108, 3);
+            canvas_draw_line(canvas, 110, 8, 121, 3);
+            canvas_draw_line(canvas, 96, 2, 96, 41);
+            canvas_draw_line(canvas, 109, 2, 109, 41);
+            canvas_draw_line(canvas, 122, 2, 122, 41);
+            canvas_draw_line(canvas, 123, 8, 126, 7);
+            canvas_draw_line(canvas, 123, 35, 126, 36);
+
+            const int32_t pos_x_center = 128 / 2;
+            const int32_t pos_y_center = 64 / 2;
+            const int32_t pos_y_offset = 10;
+            const int32_t icon_size = 20;
+            const int32_t side_icon_width = icon_size / 2;
+            const int32_t padding_center_icon = 14;
+            const int32_t spacing_between_icons = 3;
+            const int32_t scale_base = 100;
+
+            MenuItem* center_item = NULL;
+
+            // Draw 7 icons, where index 0 is the center icon
+            // [-3, -2, -1, 0, 1, 2, 3]
+            for (int8_t i = -3; i <= 3; i++) {
+                shift_position = (position + items_count + i) % items_count;
+                item = MenuItemArray_get(model->items, shift_position);
+
+                int32_t pos_x = pos_x_center;
+                int32_t pos_y = pos_y_center;
+
+                int32_t scale_width = scale_base;
+                int32_t scale_height = scale_base;
+
+                if (i < 0) {
+                    // Left sided icons
+                    pos_x -= padding_center_icon;
+                    pos_x -= ((-i) * (side_icon_width + spacing_between_icons));
+                    pos_x -= (side_icon_width / 2) / 2;
+                    pos_y = (pos_y_center - icon_size / 2) - pos_y_offset;
+                    scale_width = 50;
+                } else if (i > 0) {
+                    // Right sided icons
+                    pos_x += padding_center_icon;
+                    pos_x += (i * (side_icon_width + spacing_between_icons));
+                    pos_x -= side_icon_width;
+                    pos_y = (pos_y_center - icon_size / 2) - pos_y_offset;
+                    scale_width = 50;
+                } else if (i == 0) {
+                    // Center icon
+                    pos_x -= icon_size / 2;
+                    pos_y = (pos_y_center - (icon_size / 2)) - pos_y_offset;
+                    // Scaling > 100% doesn't look good, keep 100% for now
+                    scale_width = scale_base; // TODO: 200%
+                    scale_height = scale_base; // TODO: 200%
+                    // Save center item pointer for later
+                    center_item = item;
+                }
+
+                // Draw the icon
+                menu_centered_icon(
+                    canvas,
+                    item,
+                    pos_x,
+                    pos_y,
+                    icon_size,
+                    icon_size,
+                    scale_width,
+                    scale_height
+                );
+            }
+
+            // Draw label for center item
+            if (center_item) {
+                FuriString* name = furi_string_alloc();
+                menu_get_name(center_item, name, false);
+                elements_scrollable_text_line_centered(
+                    canvas,
+                    pos_x_center,
+                    (pos_y_center + icon_size / 2) + pos_y_offset,
+                    126,
+                    name,
+                    0,
+                    false,
+                    true
+                );
+                furi_string_free(name);
+            }
+
+            // Add scrollbar element
+            elements_scrollbar_horizontal(
+                canvas, 0, 60, 128, position, items_count
+            );
+
             break;
         }
         default:
@@ -818,7 +942,9 @@ static void menu_process_left(Menu* menu) {
                     position = position - 8;
                 }
                 break;
-
+            case MenuStyleCoverFlow:
+                position = (position + count - 1) % count;
+                break;
             default:
                 break;
             }
@@ -882,7 +1008,9 @@ static void menu_process_right(Menu* menu) {
                     position = position - 8;
                 }
                 break;
-
+            case MenuStyleCoverFlow:
+                position = (position + 1) % count;
+                break;
             default:
                 break;
             }
