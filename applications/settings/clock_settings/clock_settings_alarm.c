@@ -47,7 +47,7 @@ static void clock_settings_alarm_draw_callback(Canvas* canvas, void* ctx) {
     ClockSettingsAlramModel* model = ctx;
     char buffer[64] = {};
 
-    canvas_draw_icon_animation(canvas, 5, 6, 100, 100, model->icon);
+    canvas_draw_icon_animation(canvas, 5, 6, model->icon);
 
     canvas_set_font(canvas, FontBigNumbers);
     snprintf(buffer, sizeof(buffer), "%02u:%02u", model->now.hour, model->now.minute);

@@ -33,7 +33,6 @@ typedef enum {
     MenuStyleCount,
 } MenuStyle;
 
-
 typedef enum {
     SpiDefault, // CS on pa4
     SpiExtra, // CS on pc3
