@@ -29,6 +29,7 @@ typedef enum {
     MenuStyleC64,
     MenuStyleCompact,
     MenuStyleMNTM,
+    MenuStyleCoverFlow,
     MenuStyleCount,
 } MenuStyle;
 
