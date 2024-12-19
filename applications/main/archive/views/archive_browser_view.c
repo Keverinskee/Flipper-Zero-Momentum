@@ -58,6 +58,57 @@ void archive_browser_set_callback(
     browser->context = context;
 }
 
+static void archive_update_formatted_path(ArchiveBrowserViewModel* model) {
+    ArchiveBrowserView* browser = model->archive->browser;
+    if(!browser->path_changed) {
+        return;
+    }
+
+    ArchiveTabEnum tab = archive_get_tab(browser);
+    if(!momentum_settings.show_browser_path || archive_is_home(browser)) {
+        furi_string_set(browser->formatted_path, ArchiveTabNames[tab]);
+    } else {
+        const char* path = furi_string_get_cstr(browser->path);
+        switch(momentum_settings.show_browser_path) {
+        case BrowserPathFull:
+            furi_string_set(browser->formatted_path, browser->path);
+            break;
+
+        case BrowserPathBrief: {
+            furi_string_reset(browser->formatted_path);
+            FuriString* token = furi_string_alloc();
+            FuriString* remaining = furi_string_alloc_set(path);
+
+            while(furi_string_size(remaining) > 0) {
+                size_t slash_pos = furi_string_search_char(remaining, '/');
+                if(slash_pos == FURI_STRING_FAILURE) {
+                    furi_string_cat_printf(
+                        browser->formatted_path, "/%s", furi_string_get_cstr(remaining));
+                    break;
+                }
+                furi_string_set_n(token, remaining, 0, slash_pos);
+                if(furi_string_size(token) > 0) {
+                    furi_string_cat_printf(
+                        browser->formatted_path, "/%c", furi_string_get_char(token, 0));
+                }
+                furi_string_right(remaining, slash_pos + 1);
+            }
+
+            furi_string_free(token);
+            furi_string_free(remaining);
+            break;
+        }
+
+        default:
+            path_extract_basename(path, browser->formatted_path);
+            break;
+        }
+    }
+
+    furi_string_set(browser->prev_path, browser->path);
+    browser->path_changed = false;
+}
+
 static void render_item_menu(Canvas* canvas, ArchiveBrowserViewModel* model) {
     if(menu_array_size(model->context_menu) == 0) {
         // Need init context menu
@@ -279,6 +330,9 @@ static void archive_render_status_bar(Canvas* canvas, ArchiveBrowserViewModel* m
     if(model->tab_idx == ArchiveTabSearch &&
        scene_manager_get_scene_state(model->archive->scene_manager, ArchiveAppSceneSearch)) {
         tab_name = "Searching";
+    } else {
+        archive_update_formatted_path(model);
+        tab_name = furi_string_get_cstr(model->archive->browser->formatted_path);
     }
     bool clip = model->clipboard != NULL;
 
@@ -293,7 +347,20 @@ static void archive_render_status_bar(Canvas* canvas, ArchiveBrowserViewModel* m
     canvas_draw_rframe(canvas, 0, 0, 51, 13, 1); // frame
     canvas_draw_line(canvas, 49, 1, 49, 11); // shadow right
     canvas_draw_line(canvas, 1, 11, 49, 11); // shadow bottom
-    canvas_draw_str_aligned(canvas, 25, 9, AlignCenter, AlignBottom, tab_name);
+
+    size_t text_width = canvas_string_width(canvas, tab_name);
+    if(text_width > 45) {
+        elements_scrollable_text_line(
+            canvas,
+            3,
+            9,
+            45,
+            model->archive->browser->formatted_path,
+            model->scroll_counter,
+            false);
+    } else {
+        canvas_draw_str_aligned(canvas, 25, 9, AlignCenter, AlignBottom, tab_name);
+    }
 
     if(clip) {
         canvas_draw_rframe(canvas, 69, 0, 25, 13, 1);
@@ -593,6 +660,9 @@ ArchiveBrowserView* browser_alloc(void) {
     browser->scroll_timer = furi_timer_alloc(browser_scroll_timer, FuriTimerTypePeriodic, browser);
 
     browser->path = furi_string_alloc_set(archive_get_default_path(TAB_DEFAULT));
+    browser->prev_path = furi_string_alloc();
+    browser->formatted_path = furi_string_alloc();
+    browser->path_changed = true;
 
     with_view_model(
         browser->view,
@@ -626,6 +696,8 @@ void browser_free(ArchiveBrowserView* browser) {
         false);
 
     furi_string_free(browser->path);
+    furi_string_free(browser->prev_path);
+    furi_string_free(browser->formatted_path);
 
     view_free(browser->view);
     free(browser);
