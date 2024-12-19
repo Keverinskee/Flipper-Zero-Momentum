@@ -65,40 +65,44 @@ static void archive_update_formatted_path(ArchiveBrowserViewModel* model) {
     }
 
     ArchiveTabEnum tab = archive_get_tab(browser);
-    if(momentum_settings.show_browser_path && !archive_is_home(browser)) {
-        if(momentum_settings.show_browser_path == BrowserPathFull) {
-            furi_string_set(browser->formatted_path, browser->path);
-        } else if(momentum_settings.show_browser_path == BrowserPathBrief) {
-            furi_string_reset(browser->formatted_path);
-
-            char path_buf[256];
-            strncpy(path_buf, furi_string_get_cstr(browser->path), sizeof(path_buf) - 1);
-            path_buf[sizeof(path_buf) - 1] = '\0';
-            char* token = strtok(path_buf, "/");
-
-            while(token != NULL) {
-                char* next = strtok(NULL, "/");
-                if(next != NULL) {
-                    furi_string_cat_printf(browser->formatted_path, "/%c", token[0]);
-                } else {
-                    furi_string_cat_printf(browser->formatted_path, "/%s", token);
-                }
-                token = next;
-            }
-        } else {
-            size_t r_slash = furi_string_search_rchar(browser->path, '/');
-            if(r_slash != FURI_STRING_FAILURE) {
-                furi_string_set_n(
-                    browser->formatted_path,
-                    browser->path,
-                    r_slash + 1,
-                    furi_string_size(browser->path) - r_slash - 1);
-            } else {
-                furi_string_set(browser->formatted_path, browser->path);
-            }
-        }
-    } else {
+    if(!momentum_settings.show_browser_path || archive_is_home(browser)) {
         furi_string_set(browser->formatted_path, ArchiveTabNames[tab]);
+    } else {
+        const char* path = furi_string_get_cstr(browser->path);
+        switch(momentum_settings.show_browser_path) {
+        case BrowserPathFull:
+            furi_string_set(browser->formatted_path, browser->path);
+            break;
+
+        case BrowserPathBrief: {
+            furi_string_reset(browser->formatted_path);
+            FuriString* token = furi_string_alloc();
+            FuriString* remaining = furi_string_alloc_set(path);
+
+            while(furi_string_size(remaining) > 0) {
+                size_t slash_pos = furi_string_search_char(remaining, '/');
+                if(slash_pos == FURI_STRING_FAILURE) {
+                    furi_string_cat_printf(
+                        browser->formatted_path, "/%s", furi_string_get_cstr(remaining));
+                    break;
+                }
+                furi_string_set_n(token, remaining, 0, slash_pos);
+                if(furi_string_size(token) > 0) {
+                    furi_string_cat_printf(
+                        browser->formatted_path, "/%c", furi_string_get_char(token, 0));
+                }
+                furi_string_right(remaining, slash_pos + 1);
+            }
+
+            furi_string_free(token);
+            furi_string_free(remaining);
+            break;
+        }
+
+        default:
+            path_extract_basename(path, browser->formatted_path);
+            break;
+        }
     }
 
     furi_string_set(browser->prev_path, browser->path);
