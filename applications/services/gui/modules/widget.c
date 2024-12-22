@@ -119,6 +119,20 @@ static void widget_add_element(Widget* widget, WidgetElement* element) {
         true);
 }
 
+WidgetElement* widget_add_file_list_element(
+    Widget* widget,
+    uint8_t x,
+    uint8_t y,
+    uint8_t lines,
+    FuriString** files,
+    size_t count) {
+    furi_assert(widget);
+    WidgetElement* file_list_element =
+        widget_element_file_list_create(widget, x, y, lines, files, count);
+    widget_add_element(widget, file_list_element);
+    return file_list_element;
+}
+
 WidgetElement* widget_add_string_multiline_element(
     Widget* widget,
     uint8_t x,

@@ -125,10 +125,12 @@ static void render_item_menu(Canvas* canvas, ArchiveBrowserViewModel* model) {
                     menu_array_push_raw(model->context_menu),
                     "Info",
                     ArchiveBrowserEventFileMenuInfo);
-                archive_menu_add_item(
-                    menu_array_push_raw(model->context_menu),
-                    model->select_mode ? "Deselect" : "Select",
-                    ArchiveBrowserEventFileMenuSelectMode);
+                if(!favorites) {
+                    archive_menu_add_item(
+                        menu_array_push_raw(model->context_menu),
+                        model->select_mode ? "Deselect" : "Select",
+                        ArchiveBrowserEventFileMenuSelectMode);
+                }
                 if(selected->type != ArchiveFileTypeFolder) {
                     archive_menu_add_item(
                         menu_array_push_raw(model->context_menu),

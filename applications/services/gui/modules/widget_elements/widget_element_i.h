@@ -34,6 +34,15 @@ struct WidgetElement {
     Widget* parent;
 };
 
+/** Create file list element */
+WidgetElement* widget_element_file_list_create(
+    Widget* widget,
+    uint8_t x,
+    uint8_t y,
+    uint8_t lines,
+    FuriString** files,
+    size_t count);
+
 /** Create multi string element */
 WidgetElement* widget_element_string_multiline_create(
     uint8_t x,

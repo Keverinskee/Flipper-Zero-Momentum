@@ -112,3 +112,4 @@ void archive_leave_dir(ArchiveBrowserView* browser);
 void archive_refresh_dir(ArchiveBrowserView* browser);
 
 void archive_clear_selection(ArchiveBrowserViewModel* model);
+void archive_deselect_children(ArchiveBrowserViewModel* model, const char* parent);

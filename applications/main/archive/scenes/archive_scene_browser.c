@@ -307,20 +307,7 @@ bool archive_scene_browser_on_event(void* context, SceneManagerEvent event) {
                     if(!current->selected) {
                         // If current file type is a folder, deselect all files that start with the same path to not have a conflict.
                         if(current->type == ArchiveFileTypeFolder) {
-                            size_t write_idx = 0;
-                            for(size_t i = 0; i < model->selected_count; i++) {
-                                if(!furi_string_start_with(
-                                       model->selected_files[i], current->path)) {
-                                    if(write_idx != i) {
-                                        model->selected_files[write_idx] =
-                                            model->selected_files[i];
-                                    }
-                                    write_idx++;
-                                } else {
-                                    furi_string_free(model->selected_files[i]);
-                                }
-                            }
-                            model->selected_count = write_idx;
+                            archive_deselect_children(model, furi_string_get_cstr(current->path));
                         }
                         model->selected_files[model->selected_count] =
                             furi_string_alloc_set(current->path);

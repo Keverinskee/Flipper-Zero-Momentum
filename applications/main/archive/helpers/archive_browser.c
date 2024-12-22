@@ -733,3 +733,18 @@ void archive_clear_selection(ArchiveBrowserViewModel* model) {
         file->selected = false;
     }
 }
+
+void archive_deselect_children(ArchiveBrowserViewModel* model, const char* parent) {
+    size_t write_idx = 0;
+    for(size_t i = 0; i < model->selected_count; i++) {
+        if(!furi_string_start_with(model->selected_files[i], parent)) {
+            if(write_idx != i) {
+                model->selected_files[write_idx] = model->selected_files[i];
+            }
+            write_idx++;
+        } else {
+            furi_string_free(model->selected_files[i]);
+        }
+    }
+    model->selected_count = write_idx;
+}
