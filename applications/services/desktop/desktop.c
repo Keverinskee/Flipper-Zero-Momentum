@@ -373,6 +373,8 @@ static Desktop* desktop_alloc(void) {
 
     furi_record_create(RECORD_DESKTOP, desktop);
 
+    desktop->archive_dir = NULL;
+
     return desktop;
 }
 

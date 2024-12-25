@@ -10,6 +10,7 @@ extern "C" {
 typedef struct {
     const char* extension;
     bool skip_assets;
+    bool select_right;
     bool hide_ext;
     bool hide_dot_files;
     const Icon* file_icon;

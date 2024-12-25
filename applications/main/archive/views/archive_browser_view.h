@@ -3,6 +3,7 @@
 #include "../helpers/archive_files.h"
 #include "../helpers/archive_favorites.h"
 
+#include "archive/archive.h"
 #include <gui/gui_i.h>
 #include <gui/view.h>
 #include <gui/canvas.h>

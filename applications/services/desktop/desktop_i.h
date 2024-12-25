@@ -89,6 +89,8 @@ struct Desktop {
 
     FuriPubSub* ascii_events_pubsub;
     FuriPubSubSubscription* ascii_events_subscription;
+
+    FuriString* archive_dir;
 };
 
 void desktop_lock(Desktop* desktop, bool pin_lock);
