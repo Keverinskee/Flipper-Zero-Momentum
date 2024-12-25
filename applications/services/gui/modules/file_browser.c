@@ -116,8 +116,8 @@ struct FileBrowser {
     const char* ext_filter;
     const char* base_path;
     bool skip_assets;
-    bool select_right;
     bool hide_dot_files;
+    bool select_right;
     bool hide_ext;
 
     FileBrowserCallback callback;
