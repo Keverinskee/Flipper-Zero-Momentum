@@ -262,7 +262,7 @@ static void loader_menu_add_app_entry(
 static const Icon* loader_menu_get_ext_icon(Storage* storage, const char* path) {
     if(storage_dir_exists(storage, path)) return &I_dir_10px;
     const char* ext = strrchr(path, '.');
-    if(strcasecmp(ext, ".js") == 0) return &I_js_script_10px;
+    if(ext && strcasecmp(ext, ".js") == 0) return &I_js_script_10px;
 
     return &I_file_10px;
 }
