@@ -41,6 +41,23 @@ void widget_reset(Widget* widget);
  */
 View* widget_get_view(Widget* widget);
 
+/** Add File List Element
+ *
+ * @param      widget         Widget instance
+ * @param      x             x coordinate
+ * @param      y             y coordinate
+ * @param      lines         Number of lines visible
+ * @param      files         Array of FuriString pointers
+ * @param      count         Number of files
+ */
+WidgetElement* widget_add_file_list_element(
+    Widget* widget,
+    uint8_t x,
+    uint8_t y,
+    uint8_t lines,
+    FuriString** files,
+    size_t count);
+
 /** Add Multi String Element
  *
  * @param      widget      Widget instance
