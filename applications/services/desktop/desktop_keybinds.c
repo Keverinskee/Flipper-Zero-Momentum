@@ -219,7 +219,16 @@ void desktop_run_keybind(Desktop* desktop, InputType _type, InputKey _key) {
         loader_start_detached_with_gui_error(desktop->loader, "Storage", "wipe");
     } else {
         if(storage_common_exists(desktop->storage, furi_string_get_cstr(keybind))) {
-            run_with_default_app(furi_string_get_cstr(keybind));
+            const char* path = furi_string_get_cstr(keybind);
+            bool is_dir = storage_dir_exists(desktop->storage, path);
+
+            if(is_dir) {
+                desktop->archive_dir = furi_string_alloc_set(path);
+                view_dispatcher_send_custom_event(
+                    desktop->view_dispatcher, DesktopMainEventOpenArchive);
+            } else {
+                run_with_default_app(path);
+            }
         } else {
             loader_start_detached_with_gui_error(
                 desktop->loader, furi_string_get_cstr(keybind), NULL);

@@ -117,6 +117,7 @@ struct FileBrowser {
     const char* base_path;
     bool skip_assets;
     bool hide_dot_files;
+    bool select_right;
     bool hide_ext;
 
     FileBrowserCallback callback;
@@ -234,10 +235,11 @@ void file_browser_configure(
     furi_check(browser);
 
     browser->ext_filter = extension;
-    browser->skip_assets = skip_assets;
-    browser->hide_ext = hide_ext;
     browser->base_path = base_path;
+    browser->skip_assets = skip_assets;
     browser->hide_dot_files = hide_dot_files;
+    browser->select_right = false;
+    browser->hide_ext = hide_ext;
 
     with_view_model(
         browser->view,
@@ -278,6 +280,11 @@ void file_browser_stop(FileBrowser* browser) {
             model->list_offset = 0;
         },
         false);
+}
+
+void file_browser_set_select_right(FileBrowser* browser, bool select_right) {
+    furi_check(browser);
+    browser->select_right = select_right;
 }
 
 void file_browser_set_callback(FileBrowser* browser, FileBrowserCallback callback, void* context) {
@@ -658,10 +665,7 @@ static bool file_browser_view_input_callback(InputEvent* event, void* context) {
     bool is_loading = false;
 
     with_view_model(
-        browser->view,
-        FileBrowserModel * model,
-        { is_loading = model->folder_loading || model->list_loading; },
-        false);
+        browser->view, FileBrowserModel * model, { is_loading = model->folder_loading; }, false);
 
     if(is_loading && event->key != InputKeyBack) {
         return true; // Return without doing anything
@@ -785,6 +789,31 @@ static bool file_browser_view_input_callback(InputEvent* event, void* context) {
                 } else if(selected_item->type == BrowserItemTypeFolder) {
                     file_browser_worker_folder_enter(browser->worker, selected_item->path, 0);
                 } else if(selected_item->type == BrowserItemTypeFile) {
+                    furi_string_set(browser->result_path, selected_item->path);
+                    if(browser->callback) {
+                        browser->callback(browser->context);
+                    }
+                }
+            }
+            consumed = true;
+        }
+    } else if(event->key == InputKeyRight) {
+        if(event->type == InputTypeShort && browser->select_right) {
+            BrowserItem_t* selected_item = NULL;
+            with_view_model(
+                browser->view,
+                FileBrowserModel * model,
+                {
+                    if(browser_is_item_in_array(model, model->item_idx)) {
+                        selected_item =
+                            items_array_get(model->items, model->item_idx - model->array_offset);
+                    }
+                },
+                false);
+
+            if(selected_item) {
+                if(selected_item->type == BrowserItemTypeFile ||
+                   selected_item->type == BrowserItemTypeFolder) {
                     furi_string_set(browser->result_path, selected_item->path);
                     if(browser->callback) {
                         browser->callback(browser->context);

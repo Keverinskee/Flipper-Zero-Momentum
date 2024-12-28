@@ -31,7 +31,7 @@ static void
         scene_manager_next_scene(app->scene_manager, DesktopSettingsAppSceneKeybindsAction);
         break;
     case DesktopSettingsAppKeybindActionTypeExternalApp:
-    case DesktopSettingsAppKeybindActionTypeOpenFile: {
+    case DesktopSettingsAppKeybindActionTypeOpenFileOrDirectory: {
         const char* base_path;
         const char* extension;
         bool hide_ext;
@@ -50,6 +50,7 @@ static void
             .hide_dot_files = true,
             .skip_assets = true,
             .hide_ext = hide_ext,
+            .select_right = true,
             .item_loader_callback = keybinds_fap_selector_item_callback,
             .item_loader_context = app,
             .base_path = base_path,
@@ -98,8 +99,8 @@ void desktop_settings_scene_keybinds_action_type_on_enter(void* context) {
 
     submenu_add_item(
         submenu,
-        "Open File",
-        DesktopSettingsAppKeybindActionTypeOpenFile,
+        "Open File/Directory",
+        DesktopSettingsAppKeybindActionTypeOpenFileOrDirectory,
         desktop_settings_scene_keybinds_action_type_submenu_callback,
         app);
 
@@ -135,7 +136,7 @@ void desktop_settings_scene_keybinds_action_type_on_enter(void* context) {
             if(furi_string_end_with_str(keybind, ".fap")) {
                 selected = DesktopSettingsAppKeybindActionTypeExternalApp;
             } else {
-                selected = DesktopSettingsAppKeybindActionTypeOpenFile;
+                selected = DesktopSettingsAppKeybindActionTypeOpenFileOrDirectory;
             }
         }
         furi_record_close(RECORD_STORAGE);

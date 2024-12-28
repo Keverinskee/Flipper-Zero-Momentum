@@ -53,9 +53,17 @@ static void
         furi_thread_disable_heap_trace(desktop->scene_thread);
     }
 
+    void* context = NULL;
+    if(desktop->archive_dir) {
+        context = furi_string_alloc_set(desktop->archive_dir);
+        furi_string_free(desktop->archive_dir);
+        desktop->archive_dir = NULL;
+    }
+
     furi_thread_set_name(desktop->scene_thread, flipper_app->name);
     furi_thread_set_stack_size(desktop->scene_thread, flipper_app->stack_size);
     furi_thread_set_callback(desktop->scene_thread, flipper_app->app);
+    furi_thread_set_context(desktop->scene_thread, context);
 
     furi_thread_start(desktop->scene_thread);
 }

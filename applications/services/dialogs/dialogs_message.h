@@ -10,8 +10,9 @@ extern "C" {
 typedef struct {
     const char* extension;
     bool skip_assets;
-    bool hide_ext;
     bool hide_dot_files;
+    bool select_right;
+    bool hide_ext;
     const Icon* file_icon;
     FuriString* result_path;
     FuriString* preselected_filename;
