@@ -4,10 +4,11 @@
 #include <gui/elements.h>
 #include <core/common_defines.h>
 #include "archive/archive_i.h"
+#include "assets_icons.h"
 
 typedef struct {
     FuriString* name;
-    bool is_dir;
+    const Icon* icon;
 } FileListItem;
 
 typedef struct {
@@ -30,10 +31,7 @@ static void widget_element_file_list_draw(Canvas* canvas, WidgetElement* element
         size_t idx = model->offset + i;
         if(idx < model->count) {
             canvas_draw_icon(
-                canvas,
-                model->x + 2,
-                model->y + (i * FRAME_HEIGHT) - 9,
-                model->files[idx].is_dir ? &I_dir_10px : &I_unknown_10px);
+                canvas, model->x + 2, model->y + (i * FRAME_HEIGHT) - 9, model->files[idx].icon);
             canvas_draw_str(
                 canvas,
                 model->x + 15,
@@ -99,13 +97,14 @@ WidgetElement* widget_element_file_list_create(
     model->files = malloc(sizeof(FileListItem) * count);
     Storage* storage = furi_record_open(RECORD_STORAGE);
     for(size_t i = 0; i < count; i++) {
-        FileInfo fileinfo;
         model->files[i].name = furi_string_alloc();
         path_extract_filename(files[i], model->files[i].name, false);
-        model->files[i].is_dir = false;
-
-        if(storage_common_stat(storage, furi_string_get_cstr(files[i]), &fileinfo) == FSE_OK) {
-            model->files[i].is_dir = file_info_is_dir(&fileinfo);
+        if(storage_dir_exists(storage, furi_string_get_cstr(files[i]))) {
+            model->files[i].icon = &I_dir_10px;
+        } else {
+            const char* ext = strrchr(furi_string_get_cstr(model->files[i].name), '.');
+            model->files[i].icon = (ext && strcasecmp(ext, ".js") == 0) ? &I_js_script_10px :
+                                                                          &I_unknown_10px;
         }
     }
     furi_record_close(RECORD_STORAGE);
