@@ -3,6 +3,7 @@
 enum SubmenuIndex {
     SubmenuIndexMainApp,
     SubmenuIndexExternalApp,
+    SubmenuIndexFileDirectory,
 };
 
 static bool fap_selector_item_callback(
@@ -26,28 +27,40 @@ static void
     case SubmenuIndexMainApp:
         scene_manager_next_scene(app->scene_manager, MomentumAppSceneInterfaceMainmenuAddMain);
         break;
-    case SubmenuIndexExternalApp: {
+    case SubmenuIndexExternalApp:
+    case SubmenuIndexFileDirectory: {
+        const bool is_file_dir = index == SubmenuIndexFileDirectory;
         const DialogsFileBrowserOptions browser_options = {
-            .extension = ".fap",
+            .extension = is_file_dir ? "*" : ".fap",
             .icon = &I_unknown_10px,
             .skip_assets = true,
-            .hide_ext = true,
+            .hide_ext = !is_file_dir,
+            .select_right = is_file_dir,
             .item_loader_callback = fap_selector_item_callback,
             .item_loader_context = app,
-            .base_path = EXT_PATH("apps"),
+            .base_path = is_file_dir ? STORAGE_EXT_PATH_PREFIX : EXT_PATH("apps"),
         };
-        FuriString* temp_path = furi_string_alloc_set_str(EXT_PATH("apps"));
+        FuriString* temp_path =
+            furi_string_alloc_set_str(is_file_dir ? STORAGE_EXT_PATH_PREFIX : EXT_PATH("apps"));
+
         if(dialog_file_browser_show(app->dialogs, temp_path, temp_path, &browser_options)) {
             CharList_push_back(app->mainmenu_app_exes, strdup(furi_string_get_cstr(temp_path)));
-            Storage* storage = furi_record_open(RECORD_STORAGE);
-            uint8_t* unused_icon = malloc(FAP_MANIFEST_MAX_ICON_SIZE);
-            flipper_application_load_name_and_icon(temp_path, storage, &unused_icon, temp_path);
-            free(unused_icon);
-            furi_record_close(RECORD_STORAGE);
-            if(furi_string_start_with_str(temp_path, "[")) {
-                size_t trim = furi_string_search_str(temp_path, "] ", 1);
-                if(trim != FURI_STRING_FAILURE) {
-                    furi_string_right(temp_path, trim + 2);
+            if(is_file_dir || !furi_string_end_with(temp_path, ".fap")) {
+                const char* path = furi_string_get_cstr(temp_path);
+                const char* end = strrchr(path, '/');
+                furi_string_set_str(temp_path, end ? end + 1 : path);
+            } else {
+                Storage* storage = furi_record_open(RECORD_STORAGE);
+                uint8_t* unused_icon = malloc(FAP_MANIFEST_MAX_ICON_SIZE);
+                flipper_application_load_name_and_icon(
+                    temp_path, storage, &unused_icon, temp_path);
+                free(unused_icon);
+                furi_record_close(RECORD_STORAGE);
+                if(furi_string_start_with_str(temp_path, "[")) {
+                    size_t trim = furi_string_search_str(temp_path, "] ", 1);
+                    if(trim != FURI_STRING_FAILURE) {
+                        furi_string_right(temp_path, trim + 2);
+                    }
                 }
             }
             CharList_push_back(app->mainmenu_app_labels, strdup(furi_string_get_cstr(temp_path)));
@@ -81,6 +94,13 @@ void momentum_app_scene_interface_mainmenu_add_on_enter(void* context) {
         submenu,
         "External App",
         SubmenuIndexExternalApp,
+        momentum_app_scene_interface_mainmenu_add_submenu_callback,
+        app);
+
+    submenu_add_item(
+        submenu,
+        "File/Directory",
+        SubmenuIndexFileDirectory,
         momentum_app_scene_interface_mainmenu_add_submenu_callback,
         app);
 

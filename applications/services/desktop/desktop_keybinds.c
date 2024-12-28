@@ -220,9 +220,7 @@ void desktop_run_keybind(Desktop* desktop, InputType _type, InputKey _key) {
     } else {
         if(storage_common_exists(desktop->storage, furi_string_get_cstr(keybind))) {
             const char* path = furi_string_get_cstr(keybind);
-            FileInfo info;
-            bool is_dir = storage_common_stat(desktop->storage, path, &info) == FSE_OK &&
-                          info.flags & FSF_DIRECTORY;
+            bool is_dir = storage_dir_exists(desktop->storage, path);
 
             if(is_dir) {
                 desktop->archive_dir = furi_string_alloc_set(path);
